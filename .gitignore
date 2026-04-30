@@ -30,3 +30,6 @@ Cargo.lock.user
 *.mp4
 /tmp/
 /scratch/
+
+# gifski source clone (we keep only the built artifact under vendor/gifski/)
+vendor/gifski-src/
