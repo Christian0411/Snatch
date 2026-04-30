@@ -1,0 +1,32 @@
+# Xcode
+build/
+DerivedData/
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/
+*.xcuserstate
+*.xcscmblueprint
+*.xccheckout
+
+# Swift Package Manager
+.build/
+.swiftpm/
+Package.resolved
+.netrc
+
+# Rust (for gifski build, if vendored)
+target/
+Cargo.lock.user
+
+# macOS
+.DS_Store
+*.swp
+
+# Editors
+.vscode/
+.idea/
+
+# Local artifacts
+*.gif
+*.mp4
+/tmp/
+/scratch/
