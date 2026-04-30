@@ -7,7 +7,10 @@
 
 Snatch is a fast, simple, native macOS GIF recorder. The user selects a region of their screen, records, and gets a GIF saved to the Desktop with the file already in the system clipboard — ready to ⌘V into Slack, Discord, Notes, Mail, Finder, or anywhere that accepts a file paste.
 
-The reason to build it (rather than use Kap, LICEcap, or Gifski.app) is **speed**. Specifically: the time from "user hits stop" to "GIF saved and in clipboard" must be **sub-500 ms** even for multi-second recordings. The encoder runs continuously during capture (streaming gifski), so when the user hits stop, the GIF is essentially already written — only a flush remains.
+The reason to build it (rather than use Kap, LICEcap, or Gifski.app) is **speed at both ends of the lifecycle**:
+
+1. **Hotkey → cropper-ready (user can start dragging) in < 100 ms.** Kap takes 1–2 seconds here — partly Electron cold start, partly lazy initialization of capture infrastructure. We mitigate by keeping the menubar app resident, pre-warming the cropper window, and pre-fetching `SCShareableContent` on launch.
+2. **Stop trigger → GIF saved + clipboard ready in < 500 ms.** The encoder runs continuously during capture (streaming gifski), so when the user hits stop, the GIF is essentially already written — only a flush remains.
 
 Secondarily: **simplicity**. One Xcode project, no Electron, no FFmpeg pipeline, no plugin system, no settings window in v1, no third-party Swift packages.
 
@@ -88,6 +91,20 @@ Single Swift app, `LSUIElement = true` (menubar-only, no Dock icon). One `.app` 
 - **`captureQueue`** (serial, QoS `.userInteractive`): receives `CMSampleBuffer`s from SCStream's delegate; runs format conversion (CVPixelBuffer → tightly packed RGBA bytes).
 - **`encoderQueue`** (serial, QoS `.userInitiated`): wraps gifski's blocking `gifski_add_frame_rgba` calls.
 - **Bridge** between the two: a bounded queue of capacity 60 frames (2 s at 30 fps). On overflow, the *oldest* frame is dropped and a warning is logged. Frame drops signal that the encoder briefly fell behind on a huge region; they are graceful degradation, not a fatal error.
+
+### Pre-warm strategy (hotkey-to-cropper latency target)
+
+To hit the **< 100 ms hotkey → cropper-ready** target, the hotkey path must allocate, query, or block on nothing. All expensive setup happens on app launch or in the background:
+
+- **`CropperWindow` is instantiated on app launch** (hidden, `orderOut`). Showing the cropper means `orderFrontRegardless` + state reset — no `NSWindow` allocation, no view-tree first-render cost.
+- **`SCShareableContent.current` is pre-fetched on app launch** and cached. The cache is refreshed reactively on `NSApplication.didChangeScreenParametersNotification` (display reconfigured) and on `NSWorkspace.didActivateApplicationNotification` if the active app changed (so the exclusion list is current). Refresh runs on a background queue and never blocks the hotkey path.
+- **`RegionStore`, `ScalePresetStore`, `RecentRecordingsStore` are eager-loaded on launch** into in-memory shadows. Reads on the hotkey path hit memory only.
+- **`PermissionsCoordinator.check()` is cached** — `CGPreflightScreenCaptureAccess()` is fast after the first call, but we still cache the boolean for the process lifetime to avoid the syscall on the hotkey path.
+- **NSScreen / display info is queried on launch** and refreshed on screen-parameter changes. The cropper picks the active display from cache.
+
+If any of the above is stale at hotkey time (e.g., user reconnected a monitor between launch and now and the notification hasn't fired yet), the cropper still appears immediately with potentially-stale info; the SCStream start (which happens later, after Record) will use fresh data via a final pre-flight refresh.
+
+The hotkey handler itself does only: state-machine transition `idle → cropping`, set the cropper's pre-drawn region from `RegionStore`, call `cropperWindow.orderFrontRegardless()`, `cropperWindow.makeKey()`. All cheap, all on the main queue.
 
 ### Code layout
 
@@ -279,9 +296,11 @@ Owns the `NSStatusItem`.
 1. ⇧⌘6 / menubar → HotkeyRegistrar or MenubarController fires
    → RecordingSession.start()                    state: idle → cropping
 
-2. CropperWindow shown at screenSaver level on active display
-   • pre-draws RegionStore.lastRegion if present
+2. CropperWindow (pre-instantiated on launch) is unhidden:
+   • orderFrontRegardless + makeKey on the active display (cached NSScreen)
+   • pre-draws RegionStore.lastRegion if present (in-memory cache)
    • becomes key window so Esc lands in its responder chain
+   • NO allocation, NO SCShareableContent query, NO disk I/O on this path
 
 3. User drags / adjusts / sees live W×H label
 
@@ -290,6 +309,7 @@ Owns the `NSStatusItem`.
    → RegionStore.persist(region)                 state: cropping → recording
 
 5. RecordingSession boots pipeline:
+   • Final SCShareableContent refresh (background, may have raced ahead of us)
    • PathProvider.nextOutputURL() → ~/Desktop/snatch-…gif
    • GifskiEncoder(outputURL, fps:30, quality:90) on encoderQueue
    • SCStreamWrapper.start(region, scale, captureQueue)
@@ -458,8 +478,9 @@ The "permission granted requires relaunch" wrinkle is real macOS TCC behavior �
 5. **Notification**: appears, "Reveal in Finder" opens correct path.
 6. **Clipboard**: ⌘V into Slack, Discord, Finder, Notes, Mail — animation preserved (file-URL paste).
 7. **Visual quality**: a recording at each scale preset (Retina/Standard/Compact); eyeball check; dimensions match expectation.
-8. **Latency target**: 5-second recording, time `stop trigger → notification`. Assert < 500 ms on M-series.
-9. **Crash hygiene**: `kill -9 Snatch` mid-recording → relaunch → assert no `*.partial` files remain on Desktop.
+8. **Hotkey latency**: time from ⇧⌘6 keypress to first paint of the cropper rectangle. Assert **< 100 ms** on M-series. Measure on first-of-session hotkey (cold-but-resident app) and on repeat hotkey (warm).
+9. **Stop latency**: 5-second recording, time `stop trigger → notification`. Assert **< 500 ms** on M-series.
+10. **Crash hygiene**: `kill -9 Snatch` mid-recording → relaunch → assert no `*.partial` files remain on Desktop.
 
 ### CI
 
@@ -489,7 +510,7 @@ These are the build phases — to be refined into concrete tasks by the writing-
 gifski FFI bridging works. From a CLI test harness, produce a valid GIF from N RGBA frames in `Tests/Fixtures/`. No capture, no UI. Validates the build setup, vendored `libgifski.a`, bridging header, and the `GifskiEncoder` wrapper.
 
 ### M2 — Capture pipeline
-`SCStreamWrapper` + `FrameConverter` + bridge queue + `GifskiEncoder` end-to-end. A test runner records a fixed region for a fixed duration and produces a GIF on disk. Still no UI. Validates the streaming-encoder model and the latency target.
+`SCStreamWrapper` + `FrameConverter` + bridge queue + `GifskiEncoder` end-to-end. A test runner records a fixed region for a fixed duration and produces a GIF on disk. Still no UI. Validates the streaming-encoder model and the **stop-latency** target.
 
 ### M3 — Cropper UI
 Transparent `NSWindow` overlay. Drag rectangle, 8 resize handles, dimensions label, Record button, Space/Enter/Esc handling, region persistence. No recording yet — emits "user wants to record region X" to a console.
@@ -497,8 +518,8 @@ Transparent `NSWindow` overlay. Drag rectangle, 8 resize handles, dimensions lab
 ### M4 — Coordinator wiring
 `RecordingSession` state machine integrates Cropper + Capture + Encoder. Click Record → records → click stop → GIF saved. Hotkey not yet hooked up; menubar minimal.
 
-### M5 — Menubar + hotkey + system polish
-Full `NSStatusItem` with menu, ⇧⌘6 registration via Carbon, dynamic Esc registration during recording, notification, clipboard, recent-recordings list, partial-file cleanup on launch, full permission flow.
+### M5 — Menubar + hotkey + system polish + pre-warm
+Full `NSStatusItem` with menu, ⇧⌘6 registration via Carbon, dynamic Esc registration during recording, notification, clipboard, recent-recordings list, partial-file cleanup on launch, full permission flow. **Pre-warm strategy** (§5) wired up: cropper instantiated on launch, `SCShareableContent` pre-fetched + refreshed on display-config change, in-memory shadows of the persistence stores. Measures **hotkey-latency** target.
 
 ### M6 — Smoke pass + ship
 Run the manual smoke checklist (§9). Measure latency on representative hardware. Fix anything visible. Build a signed `.app` bundle with hardened runtime + screen recording entitlement.
