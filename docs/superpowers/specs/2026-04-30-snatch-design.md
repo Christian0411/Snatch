@@ -47,7 +47,7 @@ Secondarily: **simplicity**. One Xcode project, no Electron, no FFmpeg pipeline,
 | Recording feedback | Thin red border around captured region (excluded from capture) + menubar icon turns red. No countdown. |
 | Post-stop | Auto-save → copy file URL to clipboard → macOS notification with "Reveal in Finder" |
 | Save location | `~/Desktop/snatch-YYYY-MM-DD-HH-mm-ss.gif` (hardcoded) |
-| Output | 30 fps fixed; gifski quality ≈ 90 |
+| Output | 30 fps fixed; gifski quality = 90 |
 | Scale presets | *Retina* (2× physical pixels) · **Standard** (1× logical pixels — default) · *Compact* (0.5× logical) |
 | Cursor | Always included in the recording |
 
@@ -87,7 +87,7 @@ Single Swift app, `LSUIElement = true` (menubar-only, no Dock icon). One `.app` 
 - **Main queue**: UI only.
 - **`captureQueue`** (serial, QoS `.userInteractive`): receives `CMSampleBuffer`s from SCStream's delegate; runs format conversion (CVPixelBuffer → tightly packed RGBA bytes).
 - **`encoderQueue`** (serial, QoS `.userInitiated`): wraps gifski's blocking `gifski_add_frame_rgba` calls.
-- **Bridge** between the two: a bounded queue of capacity ≈ 60 frames (≈ 2 s at 30 fps). On overflow, the *oldest* frame is dropped and a warning is logged. Frame drops signal that the encoder briefly fell behind on a huge region; they are graceful degradation, not a fatal error.
+- **Bridge** between the two: a bounded queue of capacity 60 frames (2 s at 30 fps). On overflow, the *oldest* frame is dropped and a warning is logged. Frame drops signal that the encoder briefly fell behind on a huge region; they are graceful degradation, not a fatal error.
 
 ### Code layout
 
@@ -112,6 +112,24 @@ Snatch/
 ```
 
 ## 6. Components
+
+### Shared types
+
+```swift
+struct RGBAFrame {
+    let bytes: Data   // tightly packed RGBA8, no row padding
+    let width: Int
+    let height: Int
+}
+
+enum ScalePreset: String, Codable {
+    case retina    // 2× physical pixels (full Retina resolution)
+    case standard  // 1× logical pixels (default)
+    case compact   // 0.5× logical pixels
+}
+```
+
+Both are plain value types with no behavior. `ScalePreset` is applied at *capture* time via `SCStreamConfiguration.width/height` (hardware-accelerated downscale on the GPU), not at encode time — the encoder receives frames already at output dimensions.
 
 ### Coordinator
 
@@ -150,6 +168,7 @@ func stop() async
 
 - Uses `SCContentFilter` to exclude **our own overlay windows** (cropper, red-border, menubar) from capture.
 - Uses `SCStreamConfiguration.sourceRect` for GPU-side region cropping (no manual cropping in user code).
+- `ScalePreset` maps to `SCStreamConfiguration.width/height`: `.retina` = physical pixels (2× logical on Retina displays), `.standard` = logical pixels (1×), `.compact` = 0.5× logical pixels. Downscale is hardware-accelerated on capture.
 
 #### `FrameConverter`
 
@@ -188,7 +207,7 @@ func cancel()                 // discards writer, deletes partial output
 
 Transparent borderless `NSWindow` at `NSWindow.Level.screenSaver` on the active display, `canBecomeKey = true` so it receives keyboard events.
 
-- Initial state: full-screen dim; pre-draws `RegionStore.lastRegion` if present.
+- Initial state: full-screen dim. If `RegionStore.lastRegion` is present, the rectangle is rendered with handles + Record button already visible — user can press Record immediately for a same-region recording, or click-and-drag anywhere on the dim to start a fresh selection (which replaces the pre-drawn rectangle).
 - During drag: live rectangle with a `W × H` label rendered at the rectangle's corner.
 - On mouse-up: 8 resize handles + dimensions label + a floating "Record" button appear near the rectangle.
 - Inputs:
@@ -284,7 +303,7 @@ Owns the `NSStatusItem`.
 
 7. Frame loop:
    captureQueue:  CMSampleBuffer → FrameConverter.convert → RGBAFrame
-                  → enqueue on bridgeQueue (capacity ≈ 60)
+                  → enqueue on bridgeQueue (capacity 60)
    encoderQueue:  dequeue → GifskiEncoder.addFrame(frame, ptsTime)
                   → gifski writes to disk continuously
 ```
