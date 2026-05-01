@@ -3,34 +3,27 @@ import CoreMedia
 import CoreGraphics
 import ScreenCaptureKit
 
-/// Production `RecordingPipeline` impl. Owns the capture/encoder queues, the
-/// bridge, the SCStream wrapper, the frame converter, and the gifski encoder
-/// for the lifetime of one start..stop window.
+/// Production `RecordingPipeline` impl. Producer/consumer over
+/// `BridgeQueue`: the consume Task converts CMSampleBuffer → RGBAFrame and
+/// enqueues; an independent encoder-side drain loop running on
+/// `encoderQueue` dequeues blocking and calls `gifski_add_frame_rgba`.
 ///
-/// This class is the home of the inline plumbing previously living in
-/// `Sources/SnatchRecordCLI/main.swift:99-216` (M2). Behavior is byte-for-byte
-/// equivalent — same queues, same bridge capacity (60), same fence-and-drain
-/// at stop, same `Task.detached` for `gifski_finish`.
-///
-/// Threading: `@unchecked Sendable`. All mutable state is partitioned by the
-/// captureQueue / encoderQueue invariants documented on `GifskiEncoder` and
-/// `BridgeQueue`. Public `async` methods are reentrant-unsafe — callers must
-/// not interleave start..stop windows on the same instance. `RecordingSession`
-/// enforces that via its state machine.
+/// Threading: `@unchecked Sendable`. Mutable state (`active`) is mutated
+/// only inside `start`/`stop`/`cancel`, which `RecordingSession`'s state
+/// machine serializes. Per-recording structures are owned by the
+/// `ActiveSession` value and torn down before `active` is cleared.
 public final class ScreenRecordingPipeline: RecordingPipeline, @unchecked Sendable {
 
     private let captureQueue = DispatchQueue(label: "co.snatch.capture", qos: .userInteractive)
     private let encoderQueue = DispatchQueue(label: "co.snatch.encoder", qos: .userInitiated)
 
-    /// Lifecycle-scoped state. Allocated on `start`, retained until `stop` /
-    /// `cancel`, then reset for reuse.
     private struct ActiveSession {
         let wrapper: SCStreamWrapper
-        let converter: FrameConverter
         let bridge: BridgeQueue<(RGBAFrame, TimeInterval)>
         let encoder: GifskiEncoder
         let outputURL: URL
         let consumeTask: Task<Void, Never>
+        let consumerHandle: Task<Void, Never>
     }
 
     private var active: ActiveSession?
@@ -62,45 +55,45 @@ public final class ScreenRecordingPipeline: RecordingPipeline, @unchecked Sendab
             excludingWindows: excludingWindows
         )
 
-        let captureQueue = self.captureQueue
-        let encoderQueue = self.encoderQueue
-
-        // Same shape as M2's snatch-record-cli. The 1:1 dispatch coupling here
-        // is a documented carry-over to M5 — see snatch-record-cli's old
-        // comment block at lines 142-151.
+        // Producer: consumes CMSampleBuffer from the SCStream's AsyncStream,
+        // converts to RGBAFrame inside this Task body (so CMSampleBuffer
+        // never crosses an actor boundary as a stored value), enqueues
+        // into the bridge.
         let consumeTask = Task {
             for await sample in stream {
-                captureQueue.async {
-                    guard let frame = converter.convert(sample) else { return }
-                    let pts = sample.presentationTimeStamp.seconds
-                    let base = ptsAnchor.anchor(pts)
-                    let relativePTS = pts - base
+                guard let frame = converter.convert(sample) else { continue }
+                let pts = sample.presentationTimeStamp.seconds
+                let base = ptsAnchor.anchor(pts)
+                bridge.enqueue((frame, pts - base))
+            }
+        }
 
-                    let dropped = bridge.enqueue((frame, relativePTS))
-                    if dropped > 0 && dropped % 10 == 0 {
-                        Log.capture.debug("bridge drops at \(dropped, privacy: .public)")
-                    }
-
-                    encoderQueue.async {
-                        if let item = bridge.dequeue() {
-                            do {
-                                try encoder.addFrame(item.0, presentationTime: item.1)
-                            } catch {
-                                Log.encoder.error("addFrame failed: \(String(describing: error), privacy: .public)")
-                            }
+        // Consumer: independent drain loop on encoderQueue. Honors
+        // GifskiEncoder's "single serial queue" contract by running
+        // synchronously on encoderQueue. Exits when bridge.close() is
+        // called and the buffer drains.
+        let consumerHandle = Task.detached(priority: .userInitiated) { [encoderQueue, bridge, encoder] in
+            await withCheckedContinuation { (cont: CheckedContinuation<Void, Never>) in
+                encoderQueue.async {
+                    while let (frame, pts) = bridge.dequeueBlocking() {
+                        do {
+                            try encoder.addFrame(frame, presentationTime: pts)
+                        } catch {
+                            Log.encoder.error("addFrame failed: \(String(describing: error), privacy: .public)")
                         }
                     }
+                    cont.resume()
                 }
             }
         }
 
         active = ActiveSession(
             wrapper: wrapper,
-            converter: converter,
             bridge: bridge,
             encoder: encoder,
             outputURL: outputURL,
-            consumeTask: consumeTask
+            consumeTask: consumeTask,
+            consumerHandle: consumerHandle
         )
     }
 
@@ -109,36 +102,16 @@ public final class ScreenRecordingPipeline: RecordingPipeline, @unchecked Sendab
             preconditionFailure("ScreenRecordingPipeline.stop called with no active session")
         }
         await s.wrapper.stop()
-        s.consumeTask.cancel()
+        await s.consumeTask.value           // producer drains naturally
+        s.bridge.close()                    // wakes consumer; remaining buffer drains
+        await s.consumerHandle.value        // consumer exits
 
-        // Fence: any in-flight captureQueue.async closures must complete before
-        // we drain — otherwise late enqueues race with the drain. Same shape as
-        // snatch-record-cli/main.swift:186-204.
-        captureQueue.sync {}
-
-        // Drain the bridge into the encoder.
-        let bridge = s.bridge
-        let encoder = s.encoder
-        encoderQueue.sync {
-            while let item = bridge.dequeue() {
-                do {
-                    try encoder.addFrame(item.0, presentationTime: item.1)
-                } catch {
-                    Log.encoder.error("drain addFrame failed: \(String(describing: error), privacy: .public)")
-                }
-            }
-        }
-
-        // Ensure `active` is cleared whether `gifski_finish` succeeds or throws,
-        // so a subsequent `start()` call doesn't trip its precondition.
         defer { active = nil }
 
-        // gifski_finish blocks. Per spec §5, schedule off the calling thread.
-        let finishTask = Task.detached(priority: .userInitiated) { [encoder] in
+        let finishTask = Task.detached(priority: .userInitiated) { [encoder = s.encoder] in
             try await encoder.finish()
         }
         try await finishTask.value
-
         return s.outputURL
     }
 
@@ -146,30 +119,18 @@ public final class ScreenRecordingPipeline: RecordingPipeline, @unchecked Sendab
         guard let s = active else { return }
         defer { active = nil }
         await s.wrapper.stop()
-        s.consumeTask.cancel()
+        await s.consumeTask.value
+        s.bridge.drainAndDiscard()          // discard in-flight items
+        s.bridge.close()
+        await s.consumerHandle.value
 
-        captureQueue.sync {}
-
-        // Drain + discard any in-flight frames so they don't block the encoder
-        // teardown. We don't add them to gifski since we're aborting.
-        _ = s.bridge.drain()
-
-        // GifskiEncoder.cancel() handles `gifski_finish` + unlink. May briefly
-        // block — schedule off the @MainActor caller. Per the encoder doc
-        // (§ Threading), cancel() must not run on main.
-        let encoder = s.encoder
-        let cancelTask = Task.detached(priority: .userInitiated) {
+        let cancelTask = Task.detached(priority: .userInitiated) { [encoder = s.encoder] in
             encoder.cancel()
         }
         await cancelTask.value
     }
 }
 
-/// Mutex-protected `TimeInterval?` for the first-frame PTS we observe. The
-/// captureQueue is serial, but multiple captureQueue closures may race to
-/// observe firstPTS — explicit synchronization prevents that race.
-///
-/// Lifted from `Sources/SnatchRecordCLI/main.swift` (was `final class PTSAnchor`).
 private final class PTSAnchor: @unchecked Sendable {
     private let lock = NSLock()
     private var value: TimeInterval?
