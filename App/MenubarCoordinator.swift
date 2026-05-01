@@ -117,8 +117,9 @@ final class MenubarCoordinator {
         case .cropping:
             showCropper()
         case .recording:
-            cropperWindow.orderOut(nil)
-            showRecordingOverlay(region: lastCroppedRegion)
+            // Overlay + cropper hide were already done in handleRecordRequested,
+            // before session.start. Nothing else to do here.
+            break
         case .finalizing, .cancelling:
             recordingOverlay.orderOut(nil)
         case .idle:
@@ -151,6 +152,7 @@ final class MenubarCoordinator {
         }
 
         cropperWindow.orderFrontRegardless()
+        NSApp.activate(ignoringOtherApps: true)
         cropperWindow.makeKey()
 
         // Register for SCStream exclusion after ordering front (windowNumber
@@ -211,7 +213,13 @@ final class MenubarCoordinator {
 
         let url = pathProvider.nextOutputURL()
 
-        // Pre-flight refresh so excludingWindows() is fresh.
+        // Show the recording overlay and hide the cropper BEFORE starting
+        // capture so the overlay's windows are in the SCContentFilter
+        // exclusion list. SCContentFilter is locked-in at SCStream.start, so
+        // any windows shown after start-time leak into the recording.
+        cropperWindow.orderOut(nil)
+        showRecordingOverlay(region: screenRegion)
+
         await shareableContent.refresh()
         let excluding = shareableContent.excludingWindows()
 
@@ -224,6 +232,12 @@ final class MenubarCoordinator {
                 excludingWindows: excluding
             )
         } catch {
+            // Roll back the UI: hide the overlay since recording never started,
+            // and re-show the cropper so the user can retry.
+            recordingOverlay.orderOut(nil)
+            cropperWindow.orderFrontRegardless()
+            NSApp.activate(ignoringOtherApps: true)
+            cropperWindow.makeKey()
             notifier.presentFailure("Recording failed to start: \(error.localizedDescription)")
             Log.coordinator.error("session.start failed: \(String(describing: error), privacy: .public)")
         }
