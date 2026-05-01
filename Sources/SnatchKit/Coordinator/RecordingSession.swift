@@ -13,6 +13,7 @@ public final class RecordingSession: ObservableObject {
 
     public enum State: Equatable {
         case idle
+        case cropping       // NEW (M5): region selection in progress
         case recording
         case finalizing
         case cancelling
@@ -53,10 +54,12 @@ public final class RecordingSession: ObservableObject {
                       fps: Int,
                       outputURL: URL,
                       excludingWindows: [SCWindow]) async throws {
-        guard state == .idle else {
+        guard state == .idle || state == .cropping else {
             Log.coordinator.info("start ignored from state \(String(describing: self.state), privacy: .public)")
             return
         }
+        let from = state
+        Log.coordinator.info("start: \(String(describing: from), privacy: .public) → .recording")
         regionStore.persist(region)
         do {
             try await pipeline.start(
@@ -71,7 +74,29 @@ public final class RecordingSession: ObservableObject {
             throw RecordingSessionError.pipelineStartFailed(underlying: error)
         }
         state = .recording
-        Log.coordinator.info("state .idle → .recording")
+    }
+
+    /// Idle → Cropping. UI substate signaling region selection in progress.
+    /// No pipeline involved.
+    public func beginCropping() {
+        guard state == .idle else {
+            Log.coordinator.info("beginCropping ignored from state \(String(describing: self.state), privacy: .public)")
+            return
+        }
+        Log.coordinator.info("beginCropping: .idle → .cropping")
+        state = .cropping
+    }
+
+    /// Cropping → Idle. No-op from any other state. No pipeline involved.
+    public func cancelCropping() {
+        guard state == .cropping else {
+            if state != .idle {
+                Log.coordinator.info("cancelCropping ignored from state \(String(describing: self.state), privacy: .public)")
+            }
+            return
+        }
+        Log.coordinator.info("cancelCropping: .cropping → .idle")
+        state = .idle
     }
 
     /// Recording → Finalizing → Idle. Returns `Result` carrying the final URL,
@@ -119,9 +144,16 @@ public final class RecordingSession: ObservableObject {
     /// down capture and unlink the `.partial`. M5 will wire the user-facing cancel
     /// trigger via the Carbon Esc hotkey.
     public func cancel() async {
+        if state == .cropping {
+            cancelCropping()
+            return
+        }
         switch state {
         case .idle:
             Log.coordinator.info("cancel from .idle (no-op)")
+            return
+        case .cropping:
+            // handled above — unreachable, but required for exhaustive switch
             return
         case .recording:
             state = .cancelling

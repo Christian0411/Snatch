@@ -333,4 +333,75 @@ final class RecordingSessionTests: XCTestCase {
             set { lock.withLock { _value = newValue } }
         }
     }
+
+    // MARK: - .cropping state (M5)
+
+    private let r = CGRect(x: 0, y: 0, width: 100, height: 100)
+    private let outURL = URL(fileURLWithPath: "/tmp/m5-test.gif")
+
+    @MainActor
+    func test_beginCropping_fromIdle_transitionsToCropping() async {
+        let session = makeSession()
+
+        await session.beginCropping()
+
+        XCTAssertEqual(session.state, .cropping)
+    }
+
+    @MainActor
+    func test_beginCropping_isIgnored_fromOtherStates() async throws {
+        let session = makeSession()
+
+        await session.beginCropping()
+        await session.beginCropping()  // second call — already cropping
+        XCTAssertEqual(session.state, .cropping)
+
+        try await session.start(region: r, scale: .standard, fps: 30,
+                                outputURL: outURL, excludingWindows: [])
+        await session.beginCropping()  // ignored — already recording
+        XCTAssertEqual(session.state, .recording)
+    }
+
+    @MainActor
+    func test_cancelCropping_fromCropping_transitionsToIdle() async {
+        let session = makeSession()
+
+        await session.beginCropping()
+        await session.cancelCropping()
+
+        XCTAssertEqual(session.state, .idle)
+        XCTAssertEqual(pipeline.cancelCallCount, 0)  // no pipeline involved
+    }
+
+    @MainActor
+    func test_cancelCropping_fromIdle_isNoOp() async {
+        let session = makeSession()
+
+        await session.cancelCropping()
+
+        XCTAssertEqual(session.state, .idle)
+    }
+
+    @MainActor
+    func test_start_fromCropping_transitionsToRecording() async throws {
+        let session = makeSession()
+
+        await session.beginCropping()
+        try await session.start(region: r, scale: .standard, fps: 30,
+                                outputURL: outURL, excludingWindows: [])
+
+        XCTAssertEqual(session.state, .recording)
+        XCTAssertEqual(pipeline.startCalls.count, 1)
+    }
+
+    @MainActor
+    func test_cancel_fromCropping_aliasesToCancelCropping() async {
+        let session = makeSession()
+
+        await session.beginCropping()
+        await session.cancel()
+
+        XCTAssertEqual(session.state, .idle)
+        XCTAssertEqual(pipeline.cancelCallCount, 0)  // no pipeline.cancel; cropping has no pipeline
+    }
 }
