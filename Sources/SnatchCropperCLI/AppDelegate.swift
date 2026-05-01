@@ -10,11 +10,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         guard let screen = NSScreen.main else {
-            // No screens means we can't show a cropper. Bail.
             Self.emitCancelledAndExit()
             return
         }
 
+        // Inbound: screen-space (persisted region) → view-local.
         let initialViewLocal = regionStore.lastRegion.map { region -> CGRect in
             CGRect(
                 x: region.origin.x - screen.frame.origin.x,
@@ -23,10 +23,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 height: region.size.height
             )
         }
+
         let w = CropperWindow(screen: screen, initialRegion: initialViewLocal)
+        w.cropperView.onRecord = { [weak self] viewRect in
+            // Outbound: view-local (cropper hands us a 0,0-origin rect) → screen-space.
+            let screenRect = CGRect(
+                x: viewRect.origin.x + screen.frame.origin.x,
+                y: viewRect.origin.y + screen.frame.origin.y,
+                width: viewRect.size.width,
+                height: viewRect.size.height
+            )
+            self?.cropperRecordRequested(region: screenRect)
+        }
+        w.cropperView.onCancel = { [weak self] in
+            self?.cropperCancelled()
+        }
         self.cropperWindow = w
         w.makeKeyAndOrderFront(nil)
-        // Mouse / keyboard handlers are wired up in Tasks 11–13.
     }
 
     // Called by the cropper view in Task 13 / 14.

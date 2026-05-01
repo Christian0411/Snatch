@@ -10,6 +10,12 @@ final class CropperView: NSView {
     /// Click-target diameter of each resize handle, in points.
     static let handleSize: CGFloat = 12
 
+    /// Called when the user confirms the region (Record button, Space, or Return).
+    var onRecord: ((CGRect) -> Void)?
+
+    /// Called when the user cancels (Esc).
+    var onCancel: (() -> Void)?
+
     /// Mutated by the Task 11/12 event handlers. `didSet` triggers a redraw.
     var state: CropperState {
         didSet { needsDisplay = true }
@@ -103,6 +109,25 @@ final class CropperView: NSView {
         switch state.mode {
         case .have, .resizing: return true
         case .idle, .dragging: return false
+        }
+    }
+
+    // MARK: - First-responder + keys
+
+    override var acceptsFirstResponder: Bool { true }
+
+    override func keyDown(with event: NSEvent) {
+        switch event.keyCode {
+        case 53: // Esc
+            onCancel?()
+        case 49, 36, 76: // Space (49), Return (36), Enter (76 — keypad)
+            if let rect = state.committedRect {
+                onRecord?(rect)
+            }
+            // No-op while .idle / .dragging / .resizing — the user has not
+            // settled on a rectangle yet.
+        default:
+            super.keyDown(with: event)
         }
     }
 }

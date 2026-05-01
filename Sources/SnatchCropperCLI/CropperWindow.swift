@@ -37,4 +37,9 @@ final class CropperWindow: NSWindow {
 
     override var canBecomeKey: Bool { true }
     override var canBecomeMain: Bool { true }
+
+    override func becomeKey() {
+        super.becomeKey()
+        self.makeFirstResponder(cropperView)
+    }
 }
