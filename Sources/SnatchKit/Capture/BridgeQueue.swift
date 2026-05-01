@@ -79,17 +79,21 @@ public final class BridgeQueue<T>: @unchecked Sendable {
     }
 
     /// Blocks until an item is available, or returns nil after `close()`
-    /// has been called and the queue has drained.
+    /// has been called and the queue has drained. Subsequent calls after
+    /// nil also return nil immediately (cascade).
     public func dequeueBlocking() -> T? {
         availability.wait()
-        return lock.withLock { () -> T? in
+        var result: T?
+        var shouldCascadeSignal = false
+        lock.withLock {
             if !buffer.isEmpty {
-                return buffer.removeFirst()
+                result = buffer.removeFirst()
+            } else if _isClosed {
+                shouldCascadeSignal = true
             }
-            // Closed + empty: re-signal so any other waiters also wake.
-            if _isClosed { availability.signal() }
-            return nil
         }
+        if shouldCascadeSignal { availability.signal() }
+        return result
     }
 
     /// Marks the queue closed. Any blocked dequeuers wake; subsequent
@@ -104,11 +108,20 @@ public final class BridgeQueue<T>: @unchecked Sendable {
         if !wasClosed { availability.signal() }
     }
 
-    /// Empties the buffer without delivering. Call before `close()` for
-    /// the cancel path where in-flight items must not reach the consumer.
+    /// Empties the buffer without delivering items, and reclaims any
+    /// semaphore credits the discarded items had posted. Use this on the
+    /// cancel path where in-flight items must not reach the consumer.
+    /// Typically followed by `close()` so any blocked dequeuer wakes
+    /// promptly with nil.
     public func drainAndDiscard() {
         lock.withLock {
+            let drained = buffer.count
             buffer.removeAll(keepingCapacity: true)
+            // Reclaim semaphore credits posted by the now-discarded items
+            // so a subsequent dequeueBlocking call won't unblock spuriously.
+            for _ in 0..<drained {
+                _ = availability.wait(timeout: .now())
+            }
         }
     }
 }
