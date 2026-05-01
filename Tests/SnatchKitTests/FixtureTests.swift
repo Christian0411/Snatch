@@ -11,4 +11,14 @@ final class FixtureTests: XCTestCase {
         XCTAssertEqual(frame.bytes[1], 0)    // G
         XCTAssertEqual(frame.bytes[2], 0)    // B
     }
+
+    func test_fixture_throwsWhenBasenameMissing() {
+        XCTAssertThrowsError(try PNGLoader.fixture("does-not-exist")) { error in
+            guard case PNGLoaderError.fixtureNotFound(let name) = error else {
+                XCTFail("Expected .fixtureNotFound, got \(error)")
+                return
+            }
+            XCTAssertEqual(name, "does-not-exist")
+        }
+    }
 }

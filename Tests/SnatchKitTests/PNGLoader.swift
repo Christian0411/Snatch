@@ -8,6 +8,7 @@ enum PNGLoaderError: Error {
     case sourceCreationFailed
     case imageCreationFailed
     case bitmapContextCreationFailed
+    case fixtureNotFound(String)
 }
 
 enum PNGLoader {
@@ -47,7 +48,9 @@ enum PNGLoader {
 
     /// Resolve a fixture by basename (e.g., "frame-red") under Tests/SnatchKitTests/Fixtures.
     static func fixture(_ basename: String) throws -> RGBAFrame {
-        let url = Bundle.module.url(forResource: basename, withExtension: "png", subdirectory: "Fixtures")!
+        guard let url = Bundle.module.url(forResource: basename, withExtension: "png", subdirectory: "Fixtures") else {
+            throw PNGLoaderError.fixtureNotFound(basename)
+        }
         return try load(url)
     }
 }
