@@ -24,8 +24,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var recordingOverlay: RecordingOverlayWindow!
     private var coordinator: MenubarCoordinator!
 
+    private var menubar: MenubarController!
     private var cancellables = Set<AnyCancellable>()
-    private var statusItem: NSStatusItem!  // placeholder; Task 19 replaces with MenubarController
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         // 1) Sync sweep of partial files (spec §4 step 2)
@@ -68,11 +68,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         })
         hotkeys.registerGlobal()
 
-        // 3) Placeholder NSStatusItem so the user sees launch happened
-        // (real MenubarController arrives in Task 19).
-        statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        statusItem.button?.image = NSImage(systemSymbolName: "camera.viewfinder",
-                                            accessibilityDescription: "Snatch")
+        // 3) Menubar UI
+        menubar = MenubarController(
+            session: session,
+            scaleStore: scaleStore,
+            recentsStore: recentsStore,
+            permissions: permissions,
+            onStartRecording: { [weak coordinator] in
+                coordinator?.handleHotkey()
+            }
+        )
 
         // 4) Async pre-warm
         Task.detached { [shareableContent] in
