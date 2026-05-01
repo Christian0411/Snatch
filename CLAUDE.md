@@ -35,6 +35,7 @@ Design docs and ADRs live in `docs/`. Authoritative sources:
 ## Status
 
 - **M1 — Encoder smoke test ✅ Complete** (tag `m1-encoder-smoke-test`, commit `c4e53d7`). 11/11 unit tests pass; CLI produces a valid GIF.
-- **M2 — Capture pipeline** is next. Specific carry-over tasks are listed in spec §10 under M2; the M2 plan should fold those in.
+- **M2 — Capture pipeline ✅ Complete** (tag `m2-capture-pipeline`). `SCStreamWrapper` + `FrameConverter` + `BridgeQueue` + `GifskiEncoder` end-to-end. `snatch-record-cli` records a region for a fixed duration and writes a GIF. Stop-latency measured well under the 500 ms target on M-series hardware.
+- **M3 — Cropper UI** is next. Transition to `Snatch.xcodeproj` happens here when AppKit/SwiftUI enter.
 
 We're on Swift Package Manager (`Package.swift`) for M1–M2; Xcode project arrives at M3 when AppKit/SwiftUI enters.
