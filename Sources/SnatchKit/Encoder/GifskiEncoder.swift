@@ -31,7 +31,7 @@ extension GifskiEncoderError: LocalizedError {
 /// then frees the encoder. For `cancel()` with no frames, this returns
 /// immediately. For cancel after partial frame submission, a progress callback
 /// returning 0 triggers abort before `gifski_finish` returns.
-public final class GifskiEncoder {
+public final class GifskiEncoder: @unchecked Sendable {
     // MARK: - Threading
     //
     // GifskiEncoder is NOT internally synchronized. `addFrame`, `finish`, and

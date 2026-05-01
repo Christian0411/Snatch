@@ -14,7 +14,11 @@ import Accelerate
 /// buffer until the next `convert(_:)` call mutates it (Swift COW). Retain
 /// the frame past the next call only after crossing a queue boundary via
 /// `BridgeQueue`, which copies the value type and breaks the COW link.
-public final class FrameConverter {
+public final class FrameConverter: @unchecked Sendable {
+    // Per the threading doc above: not internally synchronized; must be owned
+    // by `captureQueue`. The `@unchecked Sendable` conformance is honest given
+    // that invariant and lets ScreenRecordingPipeline capture the converter
+    // in its consumeTask closure.
 
     /// Single reusable destination buffer. Reallocated only if the next frame
     /// has different dimensions.
