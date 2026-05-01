@@ -73,4 +73,54 @@ final class CropperGeometryTests: XCTestCase {
         let frames = CropperGeometry.handleFrames(for: r, handleSize: 12)
         XCTAssertNil(frames[.body])
     }
+
+    // MARK: - hitTest(point:in:handleSize:)
+
+    func test_hitTest_pointFarOutsideRect_returnsNil() {
+        let r = CGRect(x: 100, y: 100, width: 200, height: 100)
+        XCTAssertNil(CropperGeometry.hitTest(point: CGPoint(x: 0, y: 0), in: r, handleSize: 12))
+    }
+
+    func test_hitTest_pointDeepInsideRect_returnsBody() {
+        let r = CGRect(x: 100, y: 100, width: 200, height: 100)
+        XCTAssertEqual(
+            CropperGeometry.hitTest(point: CGPoint(x: 200, y: 150), in: r, handleSize: 12),
+            .body
+        )
+    }
+
+    func test_hitTest_pointOnTopLeftCorner_returnsTopLeftHandle() {
+        let r = CGRect(x: 100, y: 100, width: 200, height: 100)
+        XCTAssertEqual(
+            CropperGeometry.hitTest(point: CGPoint(x: 100, y: 100), in: r, handleSize: 12),
+            .topLeft
+        )
+    }
+
+    func test_hitTest_pointOnBottomRightCorner_returnsBottomRightHandle() {
+        let r = CGRect(x: 100, y: 100, width: 200, height: 100)
+        XCTAssertEqual(
+            CropperGeometry.hitTest(point: CGPoint(x: 300, y: 200), in: r, handleSize: 12),
+            .bottomRight
+        )
+    }
+
+    func test_hitTest_pointOnRightEdgeMidpoint_returnsRightHandle() {
+        let r = CGRect(x: 100, y: 100, width: 200, height: 100)
+        // Right midpoint is (300, 150)
+        XCTAssertEqual(
+            CropperGeometry.hitTest(point: CGPoint(x: 300, y: 150), in: r, handleSize: 12),
+            .right
+        )
+    }
+
+    func test_hitTest_handlesTakePrecedenceOverBody_whenRectIsLargerThanHandle() {
+        // Inside the rect AND inside the top-left handle frame. Should resolve
+        // to .topLeft (the more specific intent).
+        let r = CGRect(x: 100, y: 100, width: 200, height: 100)
+        XCTAssertEqual(
+            CropperGeometry.hitTest(point: CGPoint(x: 102, y: 102), in: r, handleSize: 12),
+            .topLeft
+        )
+    }
 }

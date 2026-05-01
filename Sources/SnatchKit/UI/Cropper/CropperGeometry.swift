@@ -48,4 +48,28 @@ public enum CropperGeometry {
             .bottomRight: frame(centeredAt: CGPoint(x: rect.maxX, y: rect.maxY)),
         ]
     }
+
+    // MARK: - Hit-testing
+
+    /// Decide which handle (if any) `point` lands on for a rectangle `rect`
+    /// drawn with `handleSize`-pt grips. Resolution order:
+    ///   1. The 8 resize-handle frames take precedence (more specific intent).
+    ///   2. The rectangle interior maps to `.body` (whole-rect drag).
+    ///   3. Anywhere else returns `nil` (fresh drag, replaces the rect).
+    public static func hitTest(
+        point: CGPoint,
+        in rect: CGRect,
+        handleSize: CGFloat
+    ) -> CropperHandle? {
+        let frames = handleFrames(for: rect, handleSize: handleSize)
+        for handle in CropperHandle.resizeCases {
+            if let f = frames[handle], f.contains(point) {
+                return handle
+            }
+        }
+        if rect.contains(point) {
+            return .body
+        }
+        return nil
+    }
 }
