@@ -82,6 +82,23 @@ final class CropperView: NSView {
         (label as NSString).draw(at: labelOrigin, withAttributes: attrs)
     }
 
+    // MARK: - Mouse handling
+
+    override func mouseDown(with event: NSEvent) {
+        let p = convert(event.locationInWindow, from: nil)
+        state = state.applyMouseDown(at: p, handleSize: Self.handleSize)
+    }
+
+    override func mouseDragged(with event: NSEvent) {
+        let p = convert(event.locationInWindow, from: nil)
+        state = state.applyMouseDragged(at: p)
+    }
+
+    override func mouseUp(with event: NSEvent) {
+        let p = convert(event.locationInWindow, from: nil)
+        state = state.applyMouseUp(at: p)
+    }
+
     private var shouldShowHandles: Bool {
         switch state.mode {
         case .have, .resizing: return true
