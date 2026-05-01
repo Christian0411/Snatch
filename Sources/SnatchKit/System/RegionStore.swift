@@ -5,7 +5,9 @@ import CoreGraphics
 /// rect as `[Double]` of length 4 (x, y, w, h) under a single key. Reading a
 /// malformed value returns nil — the stored format is private to this file
 /// and any divergence is treated as "no persisted region", not a crash.
-public final class RegionStore {
+public final class RegionStore: @unchecked Sendable {
+    // UserDefaults is documented thread-safe by Apple. All mutations go through
+    // `defaults.set/removeObject`, never through the array-of-doubles cache directly.
     private let defaults: UserDefaults
     private let key: String
 

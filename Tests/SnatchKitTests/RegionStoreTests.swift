@@ -61,4 +61,14 @@ final class RegionStoreTests: XCTestCase {
         store.clear()
         XCTAssertNil(store.lastRegion)
     }
+
+    func test_RegionStore_isSendable() {
+        // Compile-time check — if RegionStore isn't Sendable, this fails to compile.
+        let store = RegionStore(defaults: defaults)
+        Self._requireSendable(store)
+    }
+
+    /// Compile-time guard: the type parameter must conform to Sendable, otherwise
+    /// the call site won't typecheck.
+    private static func _requireSendable<T: Sendable>(_ value: T) {}
 }
