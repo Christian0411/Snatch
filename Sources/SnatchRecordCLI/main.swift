@@ -136,8 +136,19 @@ do {
 }
 
 // Pump samples until stop. Each sample is dispatched to captureQueue for
-// conversion (per spec §5) and to encoderQueue for the blocking addFrame
-// call.
+// conversion (per spec §5) and one matching encoderQueue.async pulls one
+// frame from the bridge.
+//
+// Known M2 limitation (logged here for M4): this 1:1 dispatch couples the
+// encoder-side dequeue rate to the capture-side enqueue rate. Under
+// sustained back-pressure (bridge frequently full → drop-oldest), the
+// encoderQueue.async count diverges from the bridge fill level, and some
+// dequeues will pull `nil`. Functionally correct (gifski tolerates the
+// gaps and bridge.droppedCount stays accurate) but not the cleanest
+// shape. M4's RecordingSession should refactor to a producer/consumer
+// pair where the encoder side runs an independent drain loop (or uses
+// bridge.drain() on a tick) decoupled from the per-frame captureQueue
+// closure.
 let consumeTask = Task {
     for await sample in stream {
         captureQueue.async {
@@ -171,10 +182,24 @@ let stopTriggerAt = CFAbsoluteTimeGetCurrent()
 await wrapper.stop()
 consumeTask.cancel()
 
+// Fence: wait for any in-flight captureQueue.async closures (the last few
+// frames before stop) to complete. Each such closure may dispatch one more
+// encoderQueue.async; we need them all submitted to encoderQueue before the
+// drain below, otherwise the drain races with late enqueues and the
+// finish-task fires while frames are still trickling in.
+captureQueue.sync {}
+
 // Drain the bridge into the encoder queue so no in-flight frames are lost.
+// Errors here are logged rather than swallowed — addFrame failures during
+// drain still produce a useful diagnostic and let finish() report a clean
+// failure if the encoder is poisoned.
 encoderQueue.sync {
     while let item = bridge.dequeue() {
-        try? encoder.addFrame(item.0, presentationTime: item.1)
+        do {
+            try encoder.addFrame(item.0, presentationTime: item.1)
+        } catch {
+            Log.encoder.error("drain addFrame failed: \(String(describing: error), privacy: .public)")
+        }
     }
 }
 
