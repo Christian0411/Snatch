@@ -133,13 +133,18 @@ private final class BorderOverlayView: NSView {
 
     override func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
-        NSColor.systemRed.setStroke()
+        // Muted red + dashed: ambient feedback while recording, not an
+        // alarm. 60% alpha keeps "you are recording" readable at a glance
+        // without being visually loud while you work in the captured app.
+        // Dash pattern matches the cropper for visual consistency.
+        NSColor.systemRed.withAlphaComponent(0.6).setStroke()
         let stroked = regionInViewCoords.insetBy(
             dx: RecordingOverlayWindow.borderWidth / 2,
             dy: RecordingOverlayWindow.borderWidth / 2
         )
         let path = NSBezierPath(rect: stroked)
         path.lineWidth = RecordingOverlayWindow.borderWidth
+        path.setLineDash([6, 4], count: 2, phase: 0)
         path.stroke()
     }
 }
