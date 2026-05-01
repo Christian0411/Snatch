@@ -1,4 +1,4 @@
-// Sources/SnatchSessionCLI/RecordingStopButton.swift
+// Sources/SnatchAppKit/RecordingStopButton.swift
 import AppKit
 
 /// Pill-shaped "Stop" button rendered next to the recording overlay rectangle.

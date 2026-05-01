@@ -1,4 +1,4 @@
-// Sources/SnatchSessionCLI/CropperRecordButton.swift
+// Sources/SnatchAppKit/CropperRecordButton.swift
 import AppKit
 
 /// Pill-shaped "Record" button rendered next to the cropper rectangle.

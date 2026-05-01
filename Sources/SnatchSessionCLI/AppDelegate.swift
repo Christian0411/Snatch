@@ -2,6 +2,7 @@
 import AppKit
 import ScreenCaptureKit
 import SnatchKit
+import SnatchAppKit  // NEW
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
 

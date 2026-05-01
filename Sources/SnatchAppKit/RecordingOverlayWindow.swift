@@ -1,4 +1,4 @@
-// Sources/SnatchSessionCLI/RecordingOverlayWindow.swift
+// Sources/SnatchAppKit/RecordingOverlayWindow.swift
 import AppKit
 
 /// Wraps the two NSWindows that make up the recording feedback UI:
@@ -18,10 +18,10 @@ import AppKit
 /// Naming note: the type is named `RecordingOverlayWindow` for backwards
 /// compatibility with AppDelegate's existing references, but it is no longer
 /// an `NSWindow` subclass — it's a coordinator that owns both windows.
-final class RecordingOverlayWindow {
+public final class RecordingOverlayWindow {
 
     /// Called when the user clicks the Stop button.
-    var onStop: (() -> Void)?
+    public var onStop: (() -> Void)?
 
     /// The thin-red-border window covering the region. Click-through.
     private let borderWindow: BorderOverlayWindow
@@ -31,19 +31,19 @@ final class RecordingOverlayWindow {
 
     /// SCWindow exclusion list needs windowNumbers for BOTH overlays so
     /// neither leaks into the GIF.
-    var windowNumbers: [Int] {
+    public var windowNumbers: [Int] {
         [borderWindow.windowNumber, stopWindow.windowNumber]
     }
 
     /// Width of the red border stroke, in points.
-    static let borderWidth: CGFloat = 2.5
+    public static let borderWidth: CGFloat = 2.5
 
     /// Margin between the rectangle and the Stop button (when button is outside).
-    static let stopButtonMargin: CGFloat = 8
+    public static let stopButtonMargin: CGFloat = 8
 
     /// `regionInScreenCoords` is the screen-space rectangle (CG coords, top-left
     /// origin) that the user selected via the cropper.
-    init(regionInScreenCoords region: CGRect) {
+    public init(regionInScreenCoords region: CGRect) {
         self.borderWindow = BorderOverlayWindow(regionInScreenCoords: region)
         self.stopWindow = StopButtonOverlayWindow(regionInScreenCoords: region)
         self.stopWindow.onStop = { [weak self] in
@@ -52,13 +52,13 @@ final class RecordingOverlayWindow {
     }
 
     /// Show both windows.
-    func orderFrontRegardless() {
+    public func orderFrontRegardless() {
         borderWindow.orderFrontRegardless()
         stopWindow.orderFrontRegardless()
     }
 
     /// Hide both windows.
-    func orderOut(_ sender: Any?) {
+    public func orderOut(_ sender: Any?) {
         borderWindow.orderOut(sender)
         stopWindow.orderOut(sender)
     }

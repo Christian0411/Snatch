@@ -1,20 +1,20 @@
-// Sources/SnatchSessionCLI/CropperView.swift
+// Sources/SnatchAppKit/CropperView.swift
 import AppKit
 import SnatchKit
 
 /// Renders the cropper overlay for a single screen. Owns a `CropperState`
 /// (mutated by Task 11/12 mouse/key handlers), and draws the dim + rect +
 /// handles + dimensions label every time the state changes.
-final class CropperView: NSView {
+public final class CropperView: NSView {
 
     /// Click-target diameter of each resize handle, in points.
-    static let handleSize: CGFloat = 12
+    public static let handleSize: CGFloat = 12
 
     /// Called when the user confirms the region (Record button, Space, or Return).
-    var onRecord: ((CGRect) -> Void)?
+    public var onRecord: ((CGRect) -> Void)?
 
     /// Called when the user cancels (Esc).
-    var onCancel: (() -> Void)?
+    public var onCancel: (() -> Void)?
 
     /// Floating Record button shown in .have mode, positioned near the rect.
     private let recordButton = CropperRecordButton(
@@ -22,14 +22,14 @@ final class CropperView: NSView {
     )
 
     /// Mutated by the Task 11/12 event handlers. `didSet` triggers a redraw.
-    var state: CropperState {
+    public var state: CropperState {
         didSet {
             needsDisplay = true
             needsLayout = true
         }
     }
 
-    init(frame: NSRect, initialRegion: CGRect?) {
+    public init(frame: NSRect, initialRegion: CGRect?) {
         // `initialRegion` is supplied in view-local coords. The AppDelegate
         // (Task 12) does the screen-space → view-local translation by
         // subtracting `screen.frame.origin` before constructing the window.
@@ -46,14 +46,14 @@ final class CropperView: NSView {
         addSubview(recordButton)
     }
 
-    required init?(coder: NSCoder) { fatalError("not implemented") }
+    public required init?(coder: NSCoder) { fatalError("not implemented") }
 
     /// Use a flipped coordinate system so y-down matches CG / spec §6 region
     /// semantics. Without this, the math in CropperGeometry would need a
     /// y-flip every time we crossed the AppKit boundary.
-    override var isFlipped: Bool { true }
+    public override var isFlipped: Bool { true }
 
-    override func draw(_ dirtyRect: NSRect) {
+    public override func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
 
         // 1. Full-view dim, with the displayRect cut out.
@@ -102,17 +102,17 @@ final class CropperView: NSView {
 
     // MARK: - Mouse handling
 
-    override func mouseDown(with event: NSEvent) {
+    public override func mouseDown(with event: NSEvent) {
         let p = convert(event.locationInWindow, from: nil)
         state = state.applyMouseDown(at: p, handleSize: Self.handleSize)
     }
 
-    override func mouseDragged(with event: NSEvent) {
+    public override func mouseDragged(with event: NSEvent) {
         let p = convert(event.locationInWindow, from: nil)
         state = state.applyMouseDragged(at: p)
     }
 
-    override func mouseUp(with event: NSEvent) {
+    public override func mouseUp(with event: NSEvent) {
         let p = convert(event.locationInWindow, from: nil)
         state = state.applyMouseUp(at: p)
     }
@@ -126,9 +126,9 @@ final class CropperView: NSView {
 
     // MARK: - First-responder + keys
 
-    override var acceptsFirstResponder: Bool { true }
+    public override var acceptsFirstResponder: Bool { true }
 
-    override func keyDown(with event: NSEvent) {
+    public override func keyDown(with event: NSEvent) {
         switch event.keyCode {
         case 53: // Esc
             onCancel?()
@@ -151,7 +151,7 @@ final class CropperView: NSView {
         }
     }
 
-    override func layout() {
+    public override func layout() {
         super.layout()
         layoutRecordButton()
     }

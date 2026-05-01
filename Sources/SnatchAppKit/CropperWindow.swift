@@ -1,4 +1,4 @@
-// Sources/SnatchSessionCLI/CropperWindow.swift
+// Sources/SnatchAppKit/CropperWindow.swift
 import AppKit
 
 /// Transparent borderless overlay window at `NSWindow.Level.screenSaver`,
@@ -7,11 +7,11 @@ import AppKit
 /// `canBecomeKey` is overridden to true because borderless windows default
 /// to false — without this, keyboard events (Esc, Space, Enter) would never
 /// reach the view's responder chain.
-final class CropperWindow: NSWindow {
+public final class CropperWindow: NSWindow {
 
-    let cropperView: CropperView
+    public let cropperView: CropperView
 
-    init(screen: NSScreen, initialRegion: CGRect?) {
+    public init(screen: NSScreen, initialRegion: CGRect?) {
         let frame = screen.frame
         self.cropperView = CropperView(frame: NSRect(origin: .zero, size: frame.size), initialRegion: initialRegion)
 
@@ -35,10 +35,12 @@ final class CropperWindow: NSWindow {
         self.contentView = cropperView
     }
 
-    override var canBecomeKey: Bool { true }
-    override var canBecomeMain: Bool { true }
+    public required init?(coder: NSCoder) { fatalError("not implemented") }
 
-    override func becomeKey() {
+    public override var canBecomeKey: Bool { true }
+    public override var canBecomeMain: Bool { true }
+
+    public override func becomeKey() {
         super.becomeKey()
         self.makeFirstResponder(cropperView)
     }

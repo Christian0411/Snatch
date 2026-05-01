@@ -5,9 +5,10 @@ let package = Package(
     name: "Snatch",
     platforms: [.macOS(.v14)],
     products: [
-        .library(name: "SnatchKit", targets: ["SnatchKit"]),
-        .executable(name: "snatch-cli", targets: ["SnatchCLI"]),
-        .executable(name: "snatch-record-cli", targets: ["SnatchRecordCLI"]),
+        .library(name: "SnatchKit",    targets: ["SnatchKit"]),
+        .library(name: "SnatchAppKit", targets: ["SnatchAppKit"]),
+        .executable(name: "snatch-cli",         targets: ["SnatchCLI"]),
+        .executable(name: "snatch-record-cli",  targets: ["SnatchRecordCLI"]),
         .executable(name: "snatch-session-cli", targets: ["SnatchSessionCLI"]),
     ],
     targets: [
@@ -20,10 +21,13 @@ let package = Package(
             dependencies: ["CGifski"],
             path: "Sources/SnatchKit",
             linkerSettings: [
-                // Bundle -L and -lgifski together so the linker sees them in order.
-                // SPM's `linkedLibrary` is a separate phase and can be too late.
                 .unsafeFlags(["-L", "vendor/gifski", "-lgifski"]),
             ]
+        ),
+        .target(
+            name: "SnatchAppKit",
+            dependencies: ["SnatchKit"],
+            path: "Sources/SnatchAppKit"
         ),
         .testTarget(
             name: "SnatchKitTests",
@@ -43,7 +47,7 @@ let package = Package(
         ),
         .executableTarget(
             name: "SnatchSessionCLI",
-            dependencies: ["SnatchKit"],
+            dependencies: ["SnatchKit", "SnatchAppKit"],
             path: "Sources/SnatchSessionCLI"
         ),
     ]
