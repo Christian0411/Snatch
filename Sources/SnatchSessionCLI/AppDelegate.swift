@@ -99,8 +99,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         overlay.orderFrontRegardless()
         self.overlayWindow = overlay
 
-        // 2. Resolve [SCWindow] for cropper + overlay.
-        let windowNumbers: [Int] = [cropperWindow.windowNumber, overlay.windowNumber]
+        // 2. Resolve [SCWindow] for cropper + both overlay sub-windows.
+        let windowNumbers: [Int] = [cropperWindow.windowNumber] + overlay.windowNumbers
         let scWindows: [SCWindow]
         do {
             scWindows = try await Self.resolveSCWindows(forNumbers: windowNumbers)

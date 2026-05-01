@@ -1,19 +1,39 @@
 // Sources/SnatchSessionCLI/RecordingOverlayWindow.swift
 import AppKit
 
-/// Transparent borderless overlay shown around the recording region during
-/// `.recording`. Renders a thin red border around the rectangle; everything
-/// inside the border is click-through so apps underneath stay usable.
-/// Hosts the Stop button as the only hit-testable subview.
+/// Wraps the two NSWindows that make up the recording feedback UI:
 ///
-/// This window is added to `SCContentFilter`'s exclusion list so the overlay
-/// itself never appears in the recorded GIF (per spec §6).
-final class RecordingOverlayWindow: NSWindow {
+///   1. A click-through, borderless transparent window that covers the
+///      recording region and renders a thin red border around its edge.
+///      `ignoresMouseEvents = true` so the user can interact with the
+///      apps being recorded.
+///
+///   2. A small, regular borderless window that hosts the Stop button.
+///      Positioned outside the rectangle (or inside if the rect hugs an
+///      edge). Receives mouse events normally so the button is clickable.
+///
+/// Both windows live at `.screenSaver` level and are added to
+/// `SCContentFilter`'s exclusion list so they don't appear in the GIF.
+///
+/// Naming note: the type is named `RecordingOverlayWindow` for backwards
+/// compatibility with AppDelegate's existing references, but it is no longer
+/// an `NSWindow` subclass — it's a coordinator that owns both windows.
+final class RecordingOverlayWindow {
 
     /// Called when the user clicks the Stop button.
     var onStop: (() -> Void)?
 
-    private let overlayView: RecordingOverlayView
+    /// The thin-red-border window covering the region. Click-through.
+    private let borderWindow: BorderOverlayWindow
+
+    /// The small clickable window hosting the Stop button. Not click-through.
+    private let stopWindow: StopButtonOverlayWindow
+
+    /// SCWindow exclusion list needs windowNumbers for BOTH overlays so
+    /// neither leaks into the GIF.
+    var windowNumbers: [Int] {
+        [borderWindow.windowNumber, stopWindow.windowNumber]
+    }
 
     /// Width of the red border stroke, in points.
     static let borderWidth: CGFloat = 2.5
@@ -22,19 +42,41 @@ final class RecordingOverlayWindow: NSWindow {
     static let stopButtonMargin: CGFloat = 8
 
     /// `regionInScreenCoords` is the screen-space rectangle (CG coords, top-left
-    /// origin) that the user selected via the cropper. The window's frame is
-    /// inflated by 64 points on each side so the Stop button can land outside
-    /// the rectangle when there's room.
+    /// origin) that the user selected via the cropper.
     init(regionInScreenCoords region: CGRect) {
-        let inset: CGFloat = 64
+        self.borderWindow = BorderOverlayWindow(regionInScreenCoords: region)
+        self.stopWindow = StopButtonOverlayWindow(regionInScreenCoords: region)
+        self.stopWindow.onStop = { [weak self] in
+            self?.onStop?()
+        }
+    }
+
+    /// Show both windows.
+    func orderFrontRegardless() {
+        borderWindow.orderFrontRegardless()
+        stopWindow.orderFrontRegardless()
+    }
+
+    /// Hide both windows.
+    func orderOut(_ sender: Any?) {
+        borderWindow.orderOut(sender)
+        stopWindow.orderOut(sender)
+    }
+}
+
+// MARK: - Border (click-through)
+
+/// Borderless transparent NSWindow that renders the thin red border.
+/// `ignoresMouseEvents = true` so clicks pass through to whatever's below.
+private final class BorderOverlayWindow: NSWindow {
+
+    init(regionInScreenCoords region: CGRect) {
+        // Inflate by enough to give the stroke breathing room. Border width is
+        // 2.5pt; we add a few extra so the stroke isn't clipped at window edges.
+        let inset: CGFloat = 8
         let windowFrame = region.insetBy(dx: -inset, dy: -inset)
 
-        // Convert from CG coords (top-left origin) to AppKit coords (bottom-left
-        // origin) for the NSWindow init.
-        // NSScreen.screens.first is the PRIMARY display (the one with the
-        // menu bar). Its origin is also the AppKit coordinate-system origin,
-        // so its height is the right divisor for CG → AppKit y-flip.
-        // M5 multi-display: pick the screen containing `region`.
+        // CG coords (top-left origin) → AppKit coords (bottom-left origin).
         let screenHeight = NSScreen.screens.first?.frame.height ?? 0
         let appKitFrame = NSRect(
             x: windowFrame.origin.x,
@@ -43,19 +85,11 @@ final class RecordingOverlayWindow: NSWindow {
             height: windowFrame.height
         )
 
-        // Region inside the window's local (view) coordinate space, with the
-        // 64-point inset accounted for. We pass the view-local rect to the
-        // content view so it can draw and lay out without re-doing the conversion.
         let regionInViewCoords = CGRect(
             x: inset,
             y: inset,
             width: region.width,
             height: region.height
-        )
-
-        self.overlayView = RecordingOverlayView(
-            frame: NSRect(origin: .zero, size: appKitFrame.size),
-            regionInViewCoords: regionInViewCoords
         )
 
         super.init(
@@ -70,50 +104,35 @@ final class RecordingOverlayWindow: NSWindow {
         self.hasShadow = false
         self.level = .screenSaver
         self.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
-        // Allow mouse events on the Stop button; the content view's hitTest
-        // returns nil elsewhere to pass clicks through.
-        self.ignoresMouseEvents = false
+        // CRITICAL: this is what makes the body click-through. AppKit consumes
+        // mouse events at the window level, not the view level — view.hitTest
+        // returning nil is NOT enough.
+        self.ignoresMouseEvents = true
 
-        self.contentView = overlayView
-        overlayView.onStop = { [weak self] in
-            self?.onStop?()
-        }
+        let view = BorderOverlayView(
+            frame: NSRect(origin: .zero, size: appKitFrame.size),
+            regionInViewCoords: regionInViewCoords
+        )
+        self.contentView = view
     }
-
-    // Borderless windows default to canBecomeKey=false. We intentionally do NOT
-    // override here — the overlay should not steal focus from underlying apps.
-    // The Stop button is hit-tested without needing key status.
 }
 
-/// Content view of `RecordingOverlayWindow`. Draws the thin red border around
-/// `regionInViewCoords` and hosts the Stop button. Returns nil from hitTest
-/// for non-button regions so clicks pass through.
-private final class RecordingOverlayView: NSView {
+private final class BorderOverlayView: NSView {
 
-    var onStop: (() -> Void)?
     private let regionInViewCoords: CGRect
-    private let stopButton: RecordingStopButton
 
     init(frame: NSRect, regionInViewCoords: CGRect) {
         self.regionInViewCoords = regionInViewCoords
-        self.stopButton = RecordingStopButton(
-            frame: NSRect(origin: .zero, size: RecordingStopButton.preferredSize)
-        )
         super.init(frame: frame)
-        stopButton.target = self
-        stopButton.action = #selector(stopClicked(_:))
-        addSubview(stopButton)
-        layoutStopButton()
     }
 
     required init?(coder: NSCoder) { fatalError("not implemented") }
 
-    /// Flipped so y-down matches CG coords; consistent with CropperView (M3).
+    /// Flipped so y-down matches CG / cropper convention.
     override var isFlipped: Bool { true }
 
     override func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
-        // Draw the thin red border centered on the rectangle's edge.
         NSColor.systemRed.setStroke()
         let stroked = regionInViewCoords.insetBy(
             dx: RecordingOverlayWindow.borderWidth / 2,
@@ -123,44 +142,92 @@ private final class RecordingOverlayView: NSView {
         path.lineWidth = RecordingOverlayWindow.borderWidth
         path.stroke()
     }
+}
 
-    /// Pass clicks through everywhere except the Stop button.
-    /// `point` is already in our local coordinate space — we are the window's
-    /// content view, so AppKit calls hitTest with point in our own coords.
-    override func hitTest(_ point: NSPoint) -> NSView? {
-        if stopButton.frame.contains(point) {
-            return stopButton
+// MARK: - Stop button (clickable)
+
+/// Small borderless window hosting the Stop button. Sized just large enough
+/// for the button + padding. `ignoresMouseEvents = false` so the button is
+/// clickable; window position is chosen so it doesn't overlap the captured
+/// region (or, when no room outside, it sits at the bottom-right inside).
+private final class StopButtonOverlayWindow: NSWindow {
+
+    var onStop: (() -> Void)?
+
+    private let stopButton: RecordingStopButton
+
+    init(regionInScreenCoords region: CGRect) {
+        let btnSize = RecordingStopButton.preferredSize
+        let padding: CGFloat = 6  // small breathing room around the button
+        let winSize = CGSize(
+            width: btnSize.width + 2 * padding,
+            height: btnSize.height + 2 * padding
+        )
+
+        // Default placement: just below the rectangle's bottom-right corner.
+        // CG coords (top-left origin) at this point.
+        let margin = RecordingOverlayWindow.stopButtonMargin
+        var cgX = region.maxX - btnSize.width - padding
+        var cgY = region.maxY + margin
+
+        // Find the screen so we know the bottom of usable space.
+        let screen = NSScreen.screens.first
+        let screenHeight = screen?.frame.height ?? 0
+        let screenWidth = screen?.frame.width ?? 0
+
+        // Fall back inside the rectangle's bottom-right if outside-placement
+        // would clip off the screen bottom (rectangle hugs bottom edge).
+        if cgY + winSize.height > screenHeight {
+            cgY = region.maxY - btnSize.height - padding - margin
         }
-        return nil
+
+        // Clamp x so the button window doesn't fall off the left/right edge.
+        cgX = max(0, min(cgX, screenWidth - winSize.width))
+        cgY = max(0, min(cgY, screenHeight - winSize.height))
+
+        // CG → AppKit y-flip.
+        let appKitFrame = NSRect(
+            x: cgX,
+            y: screenHeight - cgY - winSize.height,
+            width: winSize.width,
+            height: winSize.height
+        )
+
+        self.stopButton = RecordingStopButton(
+            frame: NSRect(
+                x: padding, y: padding,
+                width: btnSize.width, height: btnSize.height
+            )
+        )
+
+        super.init(
+            contentRect: appKitFrame,
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false
+        )
+
+        self.isOpaque = false
+        self.backgroundColor = .clear
+        self.hasShadow = false
+        self.level = .screenSaver
+        self.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        self.ignoresMouseEvents = false  // we want the button click
+
+        let container = NSView(frame: NSRect(origin: .zero, size: winSize))
+        // Optional: subtle darkening so the button is visible on light
+        // backgrounds. Comment out if pure transparency is preferred.
+        // container.wantsLayer = true
+        // container.layer?.backgroundColor = NSColor.black.withAlphaComponent(0.25).cgColor
+        // container.layer?.cornerRadius = 8
+        container.addSubview(stopButton)
+        self.contentView = container
+
+        stopButton.target = self
+        stopButton.action = #selector(stopClicked(_:))
     }
 
     @objc private func stopClicked(_ sender: Any?) {
         onStop?()
-    }
-
-    override func layout() {
-        super.layout()
-        layoutStopButton()
-    }
-
-    private func layoutStopButton() {
-        let btnSize = RecordingStopButton.preferredSize
-        let margin = RecordingOverlayWindow.stopButtonMargin
-
-        // Default placement: just below the rectangle's bottom-right corner,
-        // outside the red border (so it doesn't compete visually with the rect).
-        var x = regionInViewCoords.maxX - btnSize.width
-        var y = regionInViewCoords.maxY + margin
-
-        // Fall back inside the rectangle's bottom-right if outside-placement
-        // would clip off the bottom of the window (rectangle hugs screen edge).
-        if y + btnSize.height > bounds.height {
-            y = regionInViewCoords.maxY - btnSize.height - margin
-        }
-
-        // Clamp x so the button doesn't fall off the left/right edge of the window.
-        x = max(0, min(x, bounds.width - btnSize.width))
-
-        stopButton.frame = NSRect(x: x, y: y, width: btnSize.width, height: btnSize.height)
     }
 }
