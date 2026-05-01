@@ -4,6 +4,13 @@ import SnatchKit
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
 
+    private let args: Args
+
+    init(args: Args) {
+        self.args = args
+        super.init()
+    }
+
     // Wired up in Tasks 9–13.
     private var cropperWindow: NSWindow?
     private let regionStore = RegionStore()

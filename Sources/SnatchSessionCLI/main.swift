@@ -1,36 +1,33 @@
 // Sources/SnatchSessionCLI/main.swift
 //
-// snatch-cropper-cli — full-screen cropper UI smoke harness for M3.
+// snatch-session-cli — interactive cropper + GIF recorder.
 //
-// On launch, presents the transparent cropper overlay. On Record (button or
-// Space/Enter), writes the chosen region to stdout in the form:
-//
-//     RECORD region=(x,y,w,h)
-//
-// then persists it via RegionStore and exits 0. On Esc, writes:
-//
-//     CANCELLED
-//
-// and exits 0.
+// On launch:
+//   1. Parses args (--output, --scale, --fps).
+//   2. Shows the M3 transparent cropper overlay.
+//   3. On Record (button or Space/Enter): hides cropper, shows the
+//      red-border recording overlay with a Stop button, drives a
+//      RecordingSession through the M2 capture pipeline + M1 encoder.
+//   4. On Stop: saves the GIF, prints "SAVED <url> (drops=N, stop-latency=Xms)",
+//      and terminates.
+//   5. On Esc during cropping: prints "CANCELLED" and terminates.
 //
 // Run:
-//   swift run snatch-cropper-cli
+//   swift run snatch-session-cli --output /tmp/m4-smoke.gif
 //
-// Note (M3 build-system decision, see plan): this is an SPM executable, not
-// a bundled .app. It runs a normal NSApplication; macOS will give it a Dock
-// icon and a default app menu. M5 will lift these files into the new
-// Snatch.xcodeproj when LSUIElement / hotkey / notifications all need a
-// bundle simultaneously.
+// M5 will lift these files into Snatch.xcodeproj when LSUIElement,
+// hotkey, and notifications all need a bundle simultaneously.
 
 import AppKit
 
+let parsedArgs = parseSessionArgs()
+
 let app = NSApplication.shared
-let delegate = AppDelegate()
+let delegate = AppDelegate(args: parsedArgs)
 app.delegate = delegate
 
-// Foreground the process so the cropper window is key + frontmost. Without
-// this, an SPM executable launches as a "background" .Background process
-// and the window may not become key.
+// Foreground the process so the cropper window is key + frontmost. SPM
+// executables otherwise launch as ".Background" and may not become key.
 app.setActivationPolicy(.regular)
 app.activate(ignoringOtherApps: true)
 
