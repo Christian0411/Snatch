@@ -239,4 +239,98 @@ final class RecordingSessionTests: XCTestCase {
         XCTAssertEqual(session.state, .idle,
                        "state must end at .idle even when pipeline.stop fails")
     }
+
+    @MainActor
+    func test_start_whileRecording_isIgnored() async throws {
+        let session = makeSession()
+        try await session.start(
+            region: CGRect(x: 0, y: 0, width: 100, height: 100),
+            scale: .standard, fps: 30,
+            outputURL: URL(fileURLWithPath: "/tmp/m4-1.gif"),
+            excludingWindows: []
+        )
+        XCTAssertEqual(session.state, .recording)
+        XCTAssertEqual(pipeline.startCalls.count, 1)
+
+        // Second start should be ignored, not re-enter the pipeline.
+        try await session.start(
+            region: CGRect(x: 50, y: 50, width: 200, height: 200),
+            scale: .retina, fps: 30,
+            outputURL: URL(fileURLWithPath: "/tmp/m4-2.gif"),
+            excludingWindows: []
+        )
+
+        XCTAssertEqual(session.state, .recording)
+        XCTAssertEqual(pipeline.startCalls.count, 1,
+                       "pipeline.start must not be called twice")
+    }
+
+    @MainActor
+    func test_secondStart_doesNotRepersistRegion() async throws {
+        let session = makeSession()
+        let firstRegion = CGRect(x: 0, y: 0, width: 100, height: 100)
+        let secondRegion = CGRect(x: 200, y: 200, width: 50, height: 50)
+
+        try await session.start(
+            region: firstRegion, scale: .standard, fps: 30,
+            outputURL: URL(fileURLWithPath: "/tmp/m4.gif"),
+            excludingWindows: []
+        )
+        try await session.start(
+            region: secondRegion, scale: .standard, fps: 30,
+            outputURL: URL(fileURLWithPath: "/tmp/m4-2.gif"),
+            excludingWindows: []
+        )
+
+        // Ignored second start must not have overwritten the persisted region.
+        XCTAssertEqual(regionStore.lastRegion, firstRegion)
+    }
+
+    @MainActor
+    func test_cancelDuringStart_observesIdleAndIsNoop() async throws {
+        // pipeline.start blocks on a gate. While it's mid-flight, fire cancel().
+        // The cancel must observe state == .idle (because the session sets
+        // .recording only AFTER pipeline.start returns) and become a no-op.
+        let gateOpen = AtomicBool()
+        pipeline.startGate = {
+            while !gateOpen.value {
+                await Task.yield()
+            }
+        }
+
+        let session = makeSession()
+        let startTask = Task { @MainActor in
+            try await session.start(
+                region: CGRect(x: 0, y: 0, width: 100, height: 100),
+                scale: .standard, fps: 30,
+                outputURL: URL(fileURLWithPath: "/tmp/m4.gif"),
+                excludingWindows: []
+            )
+        }
+
+        // While start is parked on the gate, fire stop() and cancel().
+        // Both should observe state == .idle (start hasn't returned yet)
+        // and be ignored.
+        // stop() preconditionFails from .idle by design — call cancel() only.
+        await session.cancel()
+        XCTAssertEqual(pipeline.cancelCallCount, 0,
+                       "cancel during pre-recording-start window must be no-op")
+
+        // Open the gate, let start finish.
+        gateOpen.value = true
+        try await startTask.value
+
+        XCTAssertEqual(session.state, .recording)
+    }
+
+    /// Tiny @unchecked Sendable Bool for the test gate above. Plain `var Bool`
+    /// can't cross @MainActor / Task boundaries cleanly under strict concurrency.
+    private final class AtomicBool: @unchecked Sendable {
+        private let lock = NSLock()
+        private var _value = false
+        var value: Bool {
+            get { lock.withLock { _value } }
+            set { lock.withLock { _value = newValue } }
+        }
+    }
 }
