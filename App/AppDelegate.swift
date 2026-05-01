@@ -63,10 +63,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             shareableContent: shareableContent
         )
 
-        hotkeys = HotkeyRegistrar(handler: { [weak coordinator] in
-            coordinator?.handleHotkey()
-        })
+        hotkeys = HotkeyRegistrar(
+            onGlobal: { [weak coordinator] in coordinator?.handleHotkey() },
+            onEsc:    { [weak coordinator] in coordinator?.handleEscDuringRecording() }
+        )
         hotkeys.registerGlobal()
+        coordinator.attach(hotkeyRegistrar: hotkeys)
 
         // 3) Menubar UI
         menubar = MenubarController(

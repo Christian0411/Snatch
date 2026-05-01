@@ -25,6 +25,7 @@ final class MenubarCoordinator {
 
     private var cancellables = Set<AnyCancellable>()
     private var lastCroppedRegion: CGRect = .zero
+    private weak var hotkeyRegistrar: HotkeyRegistrar?
 
     init(session: RecordingSession,
          cropperWindow: CropperWindow,
@@ -82,13 +83,33 @@ final class MenubarCoordinator {
         }
     }
 
+    func handleEscDuringRecording() {
+        Task { @MainActor in
+            await session.cancel()
+        }
+    }
+
+    func attach(hotkeyRegistrar: HotkeyRegistrar) {
+        self.hotkeyRegistrar = hotkeyRegistrar
+    }
+
     private func installSubscriptions() {
         session.$state
             .receive(on: RunLoop.main)
             .sink { [weak self] newState in
                 self?.handleStateChange(newState)
+                self?.updateEscHotkey(for: newState)
             }
             .store(in: &cancellables)
+    }
+
+    private func updateEscHotkey(for state: RecordingSession.State) {
+        guard let hotkeyRegistrar else { return }
+        if state == .recording {
+            hotkeyRegistrar.registerEsc()
+        } else {
+            hotkeyRegistrar.unregisterEsc()
+        }
     }
 
     private func handleStateChange(_ state: RecordingSession.State) {
