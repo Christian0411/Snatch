@@ -9,6 +9,11 @@ import Accelerate
 ///
 /// Threading: not internally synchronized. Per spec §5, the conversion is
 /// expected to run on `captureQueue`. Construct one per recording session.
+///
+/// Each returned `RGBAFrame.bytes` shares backing storage with the internal
+/// buffer until the next `convert(_:)` call mutates it (Swift COW). Retain
+/// the frame past the next call only after crossing a queue boundary via
+/// `BridgeQueue`, which copies the value type and breaks the COW link.
 public final class FrameConverter {
 
     /// Single reusable destination buffer. Reallocated only if the next frame
