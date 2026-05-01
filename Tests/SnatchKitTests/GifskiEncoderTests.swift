@@ -32,4 +32,29 @@ final class GifskiEncoderTests: XCTestCase {
         XCTAssertFalse(FileManager.default.fileExists(atPath: outURL.path + ".partial"))
         XCTAssertFalse(FileManager.default.fileExists(atPath: outURL.path))
     }
+
+    func test_singleFrameRoundTrip_producesValidGif() async throws {
+        let outURL = tempDir.appendingPathComponent("single.gif")
+        let red = try PNGLoader.fixture("frame-red")
+
+        let encoder = try GifskiEncoder(outputURL: outURL, fps: 30, quality: 90)
+        try encoder.addFrame(red, presentationTime: 0.0)
+        try await encoder.finish()
+
+        XCTAssertTrue(FileManager.default.fileExists(atPath: outURL.path),
+                      "Expected final .gif to exist after finish()")
+        XCTAssertFalse(FileManager.default.fileExists(atPath: outURL.path + ".partial"),
+                       "Expected .partial to be renamed away by finish()")
+
+        let decoded = try GifDecoder.decode(outURL)
+        XCTAssertEqual(decoded.frameCount, 1)
+        XCTAssertEqual(decoded.width, 256)
+        XCTAssertEqual(decoded.height, 256)
+
+        // Sentinel pixel: top-left should be roughly red after gifski's palette quantization.
+        let (r, g, b) = decoded.pixelAt(0, 4, 4)!
+        XCTAssertGreaterThan(Int(r), 200, "Expected red channel high; got \(r)")
+        XCTAssertLessThan(Int(g), 60, "Expected green channel low; got \(g)")
+        XCTAssertLessThan(Int(b), 60, "Expected blue channel low; got \(b)")
+    }
 }
