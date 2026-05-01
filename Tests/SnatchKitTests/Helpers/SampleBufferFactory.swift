@@ -6,7 +6,6 @@ enum SampleBufferFactoryError: Error {
     case pixelBufferCreationFailed(CVReturn)
     case formatDescriptionFailed(OSStatus)
     case sampleBufferCreationFailed(OSStatus)
-    case strideTooSmall
 }
 
 enum SampleBufferFactory {
@@ -14,16 +13,17 @@ enum SampleBufferFactory {
     /// Create a CMSampleBuffer wrapping a CVPixelBuffer of the given size,
     /// filled uniformly with the given BGRA pixel value.
     ///
+    /// CoreVideo chooses the actual row stride for the underlying pixel
+    /// buffer; it is typically `>= width * 4` with extra alignment padding,
+    /// just like ScreenCaptureKit's IOSurface frames. The factory writes
+    /// pixels into whatever stride CoreVideo picked and leaves any padding
+    /// bytes uninitialised — `FrameConverter` is expected to skip them.
+    ///
     /// - Parameters:
     ///   - width: pixel width
     ///   - height: pixel height
     ///   - bgra: 4 bytes — Blue, Green, Red, Alpha — written into every pixel
     ///   - presentationTime: PTS in seconds (mapped onto a CMTime with timescale 1_000_000)
-    ///   - extraStrideBytes: bytes added to each row beyond `width * 4`. Use to
-    ///     simulate ScreenCaptureKit's IOSurface row padding. CoreVideo decides
-    ///     the *actual* stride; we will write into whatever stride it chose,
-    ///     which is typically >= width*4 with extra alignment. Pass `nil` to
-    ///     accept CoreVideo's default.
     static func makeBGRA(
         width: Int,
         height: Int,
