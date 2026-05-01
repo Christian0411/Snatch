@@ -42,11 +42,13 @@ public final class GifskiEncoder {
     ///
     /// - Parameters:
     ///   - outputURL: where the final GIF will land after `finish()`.
-    ///   - fps: reserved for downstream coordination (e.g. capture frame rate);
-    ///     gifski itself derives playback timing from per-frame `presentationTime`
-    ///     values supplied to `addFrame`. Default 30.
     ///   - quality: gifski quality knob, 1–100. Default 90.
-    public init(outputURL: URL, fps: Int = 30, quality: Int = 90) throws {
+    ///
+    /// Frame rate is *not* an encoder concern — gifski derives playback timing
+    /// from the per-frame `presentationTime` values supplied to `addFrame`.
+    /// The capture layer (`SCStreamWrapper`) controls capture rate via
+    /// `SCStreamConfiguration.minimumFrameInterval`.
+    public init(outputURL: URL, quality: Int = 90) throws {
         self.outputURL = outputURL
         self.partialURL = URL(fileURLWithPath: outputURL.path + ".partial")
 

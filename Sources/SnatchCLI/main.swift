@@ -65,7 +65,7 @@ func loadPNG(_ url: URL) throws -> RGBAFrame {
 }
 
 do {
-    let encoder = try GifskiEncoder(outputURL: outURL, fps: fps, quality: 90)
+    let encoder = try GifskiEncoder(outputURL: outURL, quality: 90)
     for (i, url) in pngURLs.enumerated() {
         let frame = try loadPNG(url)
         try encoder.addFrame(frame, presentationTime: Double(i) / Double(fps))

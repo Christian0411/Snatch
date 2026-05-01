@@ -17,7 +17,7 @@ final class GifskiEncoderTests: XCTestCase {
 
     func test_init_createsPartialFileNotFinalFile() throws {
         let outURL = tempDir.appendingPathComponent("out.gif")
-        _ = try GifskiEncoder(outputURL: outURL, fps: 30, quality: 90)
+        _ = try GifskiEncoder(outputURL: outURL, quality: 90)
 
         XCTAssertTrue(FileManager.default.fileExists(atPath: outURL.path + ".partial"))
         XCTAssertFalse(FileManager.default.fileExists(atPath: outURL.path))
@@ -25,7 +25,7 @@ final class GifskiEncoderTests: XCTestCase {
 
     func test_cancel_unlinksPartial_finalNeverCreated() throws {
         let outURL = tempDir.appendingPathComponent("out.gif")
-        let encoder = try GifskiEncoder(outputURL: outURL, fps: 30, quality: 90)
+        let encoder = try GifskiEncoder(outputURL: outURL, quality: 90)
 
         encoder.cancel()
 
@@ -37,7 +37,7 @@ final class GifskiEncoderTests: XCTestCase {
         let outURL = tempDir.appendingPathComponent("single.gif")
         let red = try PNGLoader.fixture("frame-red")
 
-        let encoder = try GifskiEncoder(outputURL: outURL, fps: 30, quality: 90)
+        let encoder = try GifskiEncoder(outputURL: outURL, quality: 90)
         try encoder.addFrame(red, presentationTime: 0.0)
         try await encoder.finish()
 
@@ -64,7 +64,7 @@ final class GifskiEncoderTests: XCTestCase {
         let green = try PNGLoader.fixture("frame-green")
         let blue = try PNGLoader.fixture("frame-blue")
 
-        let encoder = try GifskiEncoder(outputURL: outURL, fps: 30, quality: 90)
+        let encoder = try GifskiEncoder(outputURL: outURL, quality: 90)
         try encoder.addFrame(red, presentationTime: 0.0 / 30.0)
         try encoder.addFrame(green, presentationTime: 1.0 / 30.0)
         try encoder.addFrame(blue, presentationTime: 2.0 / 30.0)
@@ -92,7 +92,7 @@ final class GifskiEncoderTests: XCTestCase {
         let outURL = tempDir.appendingPathComponent("cancelled.gif")
         let red = try PNGLoader.fixture("frame-red")
 
-        let encoder = try GifskiEncoder(outputURL: outURL, fps: 30, quality: 90)
+        let encoder = try GifskiEncoder(outputURL: outURL, quality: 90)
         try encoder.addFrame(red, presentationTime: 0.0)
         try encoder.addFrame(red, presentationTime: 1.0 / 30.0)
         encoder.cancel()
