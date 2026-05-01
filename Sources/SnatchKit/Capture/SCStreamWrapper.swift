@@ -2,7 +2,6 @@ import Foundation
 import ScreenCaptureKit
 import CoreMedia
 import CoreGraphics
-import AppKit
 
 public enum SCStreamWrapperError: Error, CustomStringConvertible {
     case permissionDenied
@@ -40,8 +39,10 @@ public final class SCStreamWrapper {
 
     /// Start capture. Returns an `AsyncStream` that yields each successful
     /// `CMSampleBuffer` (status `.complete`) on the supplied `queue`. Idle /
-    /// dropped status frames are silently filtered. The stream finishes when
-    /// `stop()` is called or the wrapper is deinitialised.
+    /// dropped status frames are silently filtered. Call
+    /// `stop()` to end capture; dropping the wrapper without calling `stop()`
+    /// leaves the hardware capture running until ScreenCaptureKit's own cleanup
+    /// fires (see `deinit`).
     ///
     /// - Parameters:
     ///   - region: rectangle to capture, in points, in the global CG coord
@@ -96,6 +97,9 @@ public final class SCStreamWrapper {
         config.showsCursor = true
         config.sourceRect = Self.sourceRect(region: region, in: display)
 
+        // Unbounded buffer: the wrapper does not back-pressure here. The caller
+        // is responsible for timely iteration. Spec §5's BridgeQueue lives one
+        // layer up and provides drop-oldest semantics.
         let (asyncStream, asyncContinuation) = AsyncStream<CMSampleBuffer>.makeStream(
             bufferingPolicy: .unbounded
         )
@@ -114,7 +118,9 @@ public final class SCStreamWrapper {
         self.output = outputDelegate
         self.continuation = asyncContinuation
 
-        Log.capture.info("SCStream started: region=\(NSStringFromRect(NSRectFromCGRect(region))) scale=\(scale.rawValue, privacy: .public) fps=\(fps) outputSize=\(outputSize.width)x\(outputSize.height)")
+        Log.capture.info(
+            "SCStream started: region=\(region.debugDescription, privacy: .public) scale=\(scale.rawValue, privacy: .public) fps=\(fps, privacy: .public) outputSize=\(outputSize.width, privacy: .public)x\(outputSize.height, privacy: .public)"
+        )
         return asyncStream
     }
 
@@ -134,6 +140,11 @@ public final class SCStreamWrapper {
     }
 
     deinit {
+        // Releases the AsyncStream consumer side only. The SCStream hardware
+        // capture is NOT stopped here — `deinit` cannot await `stopCapture()`.
+        // Callers MUST call `stop()` explicitly to end capture; otherwise SCKit
+        // continues to deliver frames into the (now-finished) continuation
+        // until SCKit's own cleanup fires.
         continuation?.finish()
     }
 
