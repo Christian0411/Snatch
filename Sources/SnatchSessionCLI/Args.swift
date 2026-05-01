@@ -3,13 +3,9 @@ import Foundation
 import SnatchKit
 
 struct Args {
-    var output: URL = URL(fileURLWithPath: "/tmp/snatch-session.gif")
+    var output: URL = PathProvider().nextOutputURL()
     var scale: ScalePreset = .standard
     var fps: Int = 30
-}
-
-enum ArgsError: Error {
-    case usage
 }
 
 func parseSessionArgs() -> Args {
