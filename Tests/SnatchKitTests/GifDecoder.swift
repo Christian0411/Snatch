@@ -15,6 +15,7 @@ enum GifDecoderError: Error {
     case sourceCreationFailed
     case typeMismatch
     case frameOutOfRange
+    case emptyFrameCount
 }
 
 enum GifDecoder {
@@ -28,7 +29,9 @@ enum GifDecoder {
         }
 
         let frameCount = CGImageSourceGetCount(source)
-        precondition(frameCount > 0)
+        guard frameCount > 0 else {
+            throw GifDecoderError.emptyFrameCount
+        }
 
         let firstImage = CGImageSourceCreateImageAtIndex(source, 0, nil)!
         let width = firstImage.width
