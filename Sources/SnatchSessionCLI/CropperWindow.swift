@@ -1,4 +1,4 @@
-// Sources/SnatchCropperCLI/CropperWindow.swift
+// Sources/SnatchSessionCLI/CropperWindow.swift
 import AppKit
 
 /// Transparent borderless overlay window at `NSWindow.Level.screenSaver`,

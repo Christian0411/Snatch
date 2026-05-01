@@ -1,4 +1,4 @@
-// Sources/SnatchCropperCLI/AppDelegate.swift
+// Sources/SnatchSessionCLI/AppDelegate.swift
 import AppKit
 import SnatchKit
 
