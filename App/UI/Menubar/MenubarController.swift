@@ -7,6 +7,7 @@ final class MenubarController: NSObject {
 
     private let session: RecordingSession
     private let scaleStore: ScalePresetStore
+    private let rememberRegionStore: RememberRegionPreferenceStore
     private let recentsStore: RecentRecordingsStore
     private let permissions: PermissionsCoordinator
     private let onStartRecording: () -> Void
@@ -17,12 +18,14 @@ final class MenubarController: NSObject {
 
     init(session: RecordingSession,
          scaleStore: ScalePresetStore,
+         rememberRegionStore: RememberRegionPreferenceStore,
          recentsStore: RecentRecordingsStore,
          permissions: PermissionsCoordinator,
          onStartRecording: @escaping () -> Void,
          onStop: @escaping () -> Void) {
         self.session = session
         self.scaleStore = scaleStore
+        self.rememberRegionStore = rememberRegionStore
         self.recentsStore = recentsStore
         self.permissions = permissions
         self.onStartRecording = onStartRecording
@@ -86,6 +89,15 @@ final class MenubarController: NSObject {
         scaleItem.submenu = scaleSub
         menu.addItem(scaleItem)
 
+        let remember = NSMenuItem(
+            title: "Remember Last Capture Area",
+            action: #selector(toggleRememberAction),
+            keyEquivalent: ""
+        )
+        remember.target = self
+        remember.state = rememberRegionStore.isEnabled ? .on : .off
+        menu.addItem(remember)
+
         // Recent Recordings ▸  (built lazily in menuWillOpen via delegate)
         let recentItem = NSMenuItem(title: "Recent Recordings", action: nil, keyEquivalent: "")
         recentItem.submenu = NSMenu()
@@ -122,6 +134,10 @@ final class MenubarController: NSObject {
     @objc private func setScaleAction(_ sender: NSMenuItem) {
         guard let preset = sender.representedObject as? ScalePreset else { return }
         scaleStore.persist(preset)
+    }
+
+    @objc private func toggleRememberAction() {
+        rememberRegionStore.setEnabled(!rememberRegionStore.isEnabled)
     }
 
     @objc private func aboutAction() {

@@ -77,6 +77,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menubar = MenubarController(
             session: session,
             scaleStore: scaleStore,
+            rememberRegionStore: rememberRegionStore,
             recentsStore: recentsStore,
             permissions: permissions,
             onStartRecording: { [weak coordinator] in
