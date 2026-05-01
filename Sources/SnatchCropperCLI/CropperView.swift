@@ -16,9 +16,17 @@ final class CropperView: NSView {
     /// Called when the user cancels (Esc).
     var onCancel: (() -> Void)?
 
+    /// Floating Record button shown in .have mode, positioned near the rect.
+    private let recordButton = CropperRecordButton(
+        frame: NSRect(origin: .zero, size: CropperRecordButton.preferredSize)
+    )
+
     /// Mutated by the Task 11/12 event handlers. `didSet` triggers a redraw.
     var state: CropperState {
-        didSet { needsDisplay = true }
+        didSet {
+            needsDisplay = true
+            needsLayout = true
+        }
     }
 
     init(frame: NSRect, initialRegion: CGRect?) {
@@ -32,6 +40,10 @@ final class CropperView: NSView {
         // seam, not the view.
         self.state = CropperState(initial: initialRegion)
         super.init(frame: frame)
+        recordButton.target = self
+        recordButton.action = #selector(recordButtonClicked(_:))
+        recordButton.isHidden = true
+        addSubview(recordButton)
     }
 
     required init?(coder: NSCoder) { fatalError("not implemented") }
@@ -129,5 +141,37 @@ final class CropperView: NSView {
         default:
             super.keyDown(with: event)
         }
+    }
+
+    // MARK: - Record button
+
+    @objc private func recordButtonClicked(_ sender: Any?) {
+        if let rect = state.committedRect {
+            onRecord?(rect)
+        }
+    }
+
+    override func layout() {
+        super.layout()
+        layoutRecordButton()
+    }
+
+    private func layoutRecordButton() {
+        guard case .have(let rect) = state.mode else {
+            recordButton.isHidden = true
+            return
+        }
+        recordButton.isHidden = false
+        let btnSize = CropperRecordButton.preferredSize
+        // Placement: just below the rectangle's bottom-right, tucked back
+        // inside the screen if the rect is near the bottom edge.
+        var x = rect.maxX - btnSize.width
+        var y = rect.maxY + 8
+        if y + btnSize.height > bounds.height {
+            // Fall back to inside the rect at the bottom-right.
+            y = rect.maxY - btnSize.height - 8
+        }
+        x = max(0, min(x, bounds.width - btnSize.width))
+        recordButton.frame = NSRect(x: x, y: y, width: btnSize.width, height: btnSize.height)
     }
 }
