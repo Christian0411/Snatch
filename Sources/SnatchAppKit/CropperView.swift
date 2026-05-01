@@ -76,11 +76,20 @@ public final class CropperView: NSView {
         outline.stroke()
 
         // 3. Resize handles (only when committed or while resizing — not
-        //    during a fresh drag).
+        //    during a fresh drag). Drawn as small white circles with a thin
+        //    grey rim — matches macOS native screenshot tool. Click target
+        //    stays at `Self.handleSize` (12pt); the visible oval is inset
+        //    by 2pt on each side, giving an 8pt circle centered in the
+        //    12pt hit zone.
         if shouldShowHandles {
-            NSColor.white.setFill()
             for (_, frame) in CropperGeometry.handleFrames(for: rect, handleSize: Self.handleSize) {
-                NSBezierPath(rect: frame).fill()
+                let visible = frame.insetBy(dx: 2, dy: 2)
+                let oval = NSBezierPath(ovalIn: visible)
+                NSColor.white.setFill()
+                oval.fill()
+                NSColor.systemGray.setStroke()
+                oval.lineWidth = 1
+                oval.stroke()
             }
         }
 
