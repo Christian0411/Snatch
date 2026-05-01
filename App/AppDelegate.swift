@@ -13,6 +13,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var session: RecordingSession!
     private var regionStore: RegionStore!
     private var scaleStore: ScalePresetStore!
+    private var rememberRegionStore: RememberRegionPreferenceStore!
     private var recentsStore: RecentRecordingsStore!
     private var permissions: PermissionsCoordinator!
     private var pasteboard: PasteboardWriter!
@@ -36,6 +37,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // 2) Component graph (spec §4 step 3)
         regionStore      = RegionStore()
         scaleStore       = ScalePresetStore()
+        rememberRegionStore = RememberRegionPreferenceStore()
         recentsStore     = RecentRecordingsStore()
         permissions      = PermissionsCoordinator()
         pasteboard       = PasteboardWriter()
@@ -55,6 +57,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             recordingOverlay: recordingOverlay,
             regionStore: regionStore,
             scaleStore: scaleStore,
+            rememberRegionStore: rememberRegionStore,
             recentsStore: recentsStore,
             permissions: permissions,
             pasteboard: pasteboard,

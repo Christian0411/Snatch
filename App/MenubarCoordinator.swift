@@ -15,6 +15,7 @@ final class MenubarCoordinator {
     var recordingOverlay: RecordingOverlayWindow
     let regionStore: RegionStore
     let scaleStore: ScalePresetStore
+    let rememberRegionStore: RememberRegionPreferenceStore
     let recentsStore: RecentRecordingsStore
     let permissions: PermissionsCoordinator
     let permissionAlerts: PermissionAlertPresenter
@@ -32,6 +33,7 @@ final class MenubarCoordinator {
          recordingOverlay: RecordingOverlayWindow,
          regionStore: RegionStore,
          scaleStore: ScalePresetStore,
+         rememberRegionStore: RememberRegionPreferenceStore,
          recentsStore: RecentRecordingsStore,
          permissions: PermissionsCoordinator,
          pasteboard: PasteboardWriter,
@@ -43,6 +45,7 @@ final class MenubarCoordinator {
         self.recordingOverlay = recordingOverlay
         self.regionStore = regionStore
         self.scaleStore = scaleStore
+        self.rememberRegionStore = rememberRegionStore
         self.recentsStore = recentsStore
         self.permissions = permissions
         self.permissionAlerts = PermissionAlertPresenter()
@@ -139,7 +142,7 @@ final class MenubarCoordinator {
         // CropperView uses a flipped coordinate system with origin at the
         // window's top-left. screen.frame.origin must be subtracted to convert
         // from screen-space (CG) to view-local coords.
-        if let last = regionStore.lastRegion {
+        if rememberRegionStore.isEnabled, let last = regionStore.lastRegion {
             let viewLocal = CGRect(
                 x: last.origin.x - screen.frame.origin.x,
                 y: last.origin.y - screen.frame.origin.y,
