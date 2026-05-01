@@ -178,4 +178,65 @@ final class RecordingSessionTests: XCTestCase {
         XCTAssertEqual(pipeline.stopCallCount, 0,
                        "cancel must use pipeline.cancel, not pipeline.stop")
     }
+
+    private struct StubPipelineError: Error, CustomStringConvertible {
+        let label: String
+        var description: String { "stub-pipeline-error[\(label)]" }
+    }
+
+    @MainActor
+    func test_start_pipelineFailure_keepsStateIdleAndRethrowsWrapped() async {
+        pipeline.startError = StubPipelineError(label: "start")
+        let session = makeSession()
+
+        do {
+            try await session.start(
+                region: CGRect(x: 0, y: 0, width: 100, height: 100),
+                scale: .standard, fps: 30,
+                outputURL: URL(fileURLWithPath: "/tmp/m4.gif"),
+                excludingWindows: []
+            )
+            XCTFail("expected throw")
+        } catch let err as RecordingSessionError {
+            switch err {
+            case .pipelineStartFailed(let underlying):
+                XCTAssertEqual(String(describing: underlying), "stub-pipeline-error[start]")
+            default:
+                XCTFail("expected .pipelineStartFailed, got \(err)")
+            }
+        } catch {
+            XCTFail("expected RecordingSessionError, got \(error)")
+        }
+
+        XCTAssertEqual(session.state, .idle)
+    }
+
+    @MainActor
+    func test_stop_pipelineFailure_endsAtIdleAndRethrowsWrapped() async throws {
+        let session = makeSession()
+        try await session.start(
+            region: CGRect(x: 0, y: 0, width: 100, height: 100),
+            scale: .standard, fps: 30,
+            outputURL: URL(fileURLWithPath: "/tmp/m4.gif"),
+            excludingWindows: []
+        )
+        pipeline.stopError = StubPipelineError(label: "stop")
+
+        do {
+            _ = try await session.stop()
+            XCTFail("expected throw")
+        } catch let err as RecordingSessionError {
+            switch err {
+            case .pipelineStopFailed(let underlying):
+                XCTAssertEqual(String(describing: underlying), "stub-pipeline-error[stop]")
+            default:
+                XCTFail("expected .pipelineStopFailed, got \(err)")
+            }
+        } catch {
+            XCTFail("expected RecordingSessionError, got \(error)")
+        }
+
+        XCTAssertEqual(session.state, .idle,
+                       "state must end at .idle even when pipeline.stop fails")
+    }
 }
