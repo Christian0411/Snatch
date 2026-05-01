@@ -64,7 +64,10 @@ public final class ScreenRecordingPipeline: RecordingPipeline, @unchecked Sendab
                 guard let frame = converter.convert(sample) else { continue }
                 let pts = sample.presentationTimeStamp.seconds
                 let base = ptsAnchor.anchor(pts)
-                bridge.enqueue((frame, pts - base))
+                let dropped = bridge.enqueue((frame, pts - base))
+                if dropped > 0 && dropped % 10 == 0 {
+                    Log.capture.debug("bridge drops at \(dropped, privacy: .public)")
+                }
             }
         }
 

@@ -7,8 +7,12 @@ import Accelerate
 /// RGBA `RGBAFrame`s. Strips row padding (`bytesPerRow > width * 4`) and
 /// performs a byte-swap (BGRA → RGBA) via `vImagePermuteChannels_ARGB8888`.
 ///
-/// Threading: not internally synchronized. Per spec §5, the conversion is
-/// expected to run on `captureQueue`. Construct one per recording session.
+/// Threading: not internally synchronized. Has mutable internal state
+/// (buffer, bufferWidth, bufferHeight) that races if accessed concurrently.
+/// Safe to call `convert` from any single serial context — i.e., no concurrent
+/// calls from different threads/Tasks. `ScreenRecordingPipeline` invokes it
+/// from a single producer Task that processes the SCStream output sequentially,
+/// which satisfies this contract. Construct one per recording session.
 ///
 /// Each returned `RGBAFrame.bytes` shares backing storage with the internal
 /// buffer until the next `convert(_:)` call mutates it (Swift COW). Retain
@@ -16,9 +20,9 @@ import Accelerate
 /// `BridgeQueue`, which copies the value type and breaks the COW link.
 public final class FrameConverter: @unchecked Sendable {
     // Per the threading doc above: not internally synchronized; must be owned
-    // by `captureQueue`. The `@unchecked Sendable` conformance is honest given
-    // that invariant and lets ScreenRecordingPipeline capture the converter
-    // in its consumeTask closure.
+    // by a single serial context. The `@unchecked Sendable` conformance is
+    // honest given that invariant and lets ScreenRecordingPipeline capture the
+    // converter in its producer Task closure.
 
     /// Single reusable destination buffer. Reallocated only if the next frame
     /// has different dimensions.
