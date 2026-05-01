@@ -87,4 +87,17 @@ final class GifskiEncoderTests: XCTestCase {
         let (r2, g2, b2) = decoded.pixelAt(2, 4, 4)!
         XCTAssertLessThan(Int(r2), 60); XCTAssertLessThan(Int(g2), 60); XCTAssertGreaterThan(Int(b2), 200)
     }
+
+    func test_cancelMidEncode_deletesPartial_noFinalFile() throws {
+        let outURL = tempDir.appendingPathComponent("cancelled.gif")
+        let red = try PNGLoader.fixture("frame-red")
+
+        let encoder = try GifskiEncoder(outputURL: outURL, fps: 30, quality: 90)
+        try encoder.addFrame(red, presentationTime: 0.0)
+        try encoder.addFrame(red, presentationTime: 1.0 / 30.0)
+        encoder.cancel()
+
+        XCTAssertFalse(FileManager.default.fileExists(atPath: outURL.path + ".partial"))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: outURL.path))
+    }
 }
