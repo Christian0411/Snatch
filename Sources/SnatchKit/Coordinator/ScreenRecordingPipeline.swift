@@ -129,19 +129,22 @@ public final class ScreenRecordingPipeline: RecordingPipeline, @unchecked Sendab
             }
         }
 
+        // Ensure `active` is cleared whether `gifski_finish` succeeds or throws,
+        // so a subsequent `start()` call doesn't trip its precondition.
+        defer { active = nil }
+
         // gifski_finish blocks. Per spec §5, schedule off the calling thread.
         let finishTask = Task.detached(priority: .userInitiated) { [encoder] in
             try await encoder.finish()
         }
         try await finishTask.value
 
-        let url = s.outputURL
-        active = nil
-        return url
+        return s.outputURL
     }
 
     public func cancel() async {
         guard let s = active else { return }
+        defer { active = nil }
         await s.wrapper.stop()
         s.consumeTask.cancel()
 
@@ -159,8 +162,6 @@ public final class ScreenRecordingPipeline: RecordingPipeline, @unchecked Sendab
             encoder.cancel()
         }
         await cancelTask.value
-
-        active = nil
     }
 }
 
