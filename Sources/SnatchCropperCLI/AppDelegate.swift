@@ -9,10 +9,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let regionStore = RegionStore()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // Cropper window construction lands in Task 9.
-        // For now we exit immediately so the SPM target builds and runs end-
-        // to-end without a hang, proving the wiring.
-        Self.emitCancelledAndExit()
+        guard let screen = NSScreen.main else {
+            // No screens means we can't show a cropper. Bail.
+            Self.emitCancelledAndExit()
+            return
+        }
+
+        let w = CropperWindow(screen: screen)
+        self.cropperWindow = w
+        w.makeKeyAndOrderFront(nil)
+        // Mouse / keyboard handlers are wired up in Tasks 11–13.
     }
 
     // Called by the cropper view in Task 13 / 14.
