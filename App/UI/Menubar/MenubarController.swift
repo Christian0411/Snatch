@@ -10,6 +10,7 @@ final class MenubarController: NSObject {
     private let recentsStore: RecentRecordingsStore
     private let permissions: PermissionsCoordinator
     private let onStartRecording: () -> Void
+    private let onStop: () -> Void
 
     private let statusItem: NSStatusItem
     private var cancellables = Set<AnyCancellable>()
@@ -18,12 +19,14 @@ final class MenubarController: NSObject {
          scaleStore: ScalePresetStore,
          recentsStore: RecentRecordingsStore,
          permissions: PermissionsCoordinator,
-         onStartRecording: @escaping () -> Void) {
+         onStartRecording: @escaping () -> Void,
+         onStop: @escaping () -> Void) {
         self.session = session
         self.scaleStore = scaleStore
         self.recentsStore = recentsStore
         self.permissions = permissions
         self.onStartRecording = onStartRecording
+        self.onStop = onStop
         self.statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         super.init()
 
@@ -49,7 +52,7 @@ final class MenubarController: NSObject {
     @objc private func statusItemClicked(_ sender: NSStatusBarButton) {
         // While recording, click stops immediately — no menu.
         if session.state == .recording {
-            Task { @MainActor in _ = try? await session.stop() }
+            onStop()
             return
         }
         // Otherwise show the dropdown.

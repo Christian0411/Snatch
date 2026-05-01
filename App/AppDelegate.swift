@@ -78,6 +78,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             permissions: permissions,
             onStartRecording: { [weak coordinator] in
                 coordinator?.handleHotkey()
+            },
+            onStop: { [weak coordinator] in
+                guard let coordinator else { return }
+                Task { @MainActor in
+                    await coordinator.requestStop()
+                }
             }
         )
 

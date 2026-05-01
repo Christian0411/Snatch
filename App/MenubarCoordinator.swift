@@ -77,7 +77,7 @@ final class MenubarCoordinator {
             switch session.state {
             case .idle:                           session.beginCropping()
             case .cropping:                       session.cancelCropping()
-            case .recording:                      _ = try? await session.stop()
+            case .recording:                      await self.requestStop()
             case .finalizing, .cancelling:        break
             }
         }
@@ -170,7 +170,7 @@ final class MenubarCoordinator {
         overlay.onStop = { [weak self] in
             guard let self else { return }
             Task { @MainActor in
-                await self.handleStopRequested()
+                await self.requestStop()
             }
         }
         recordingOverlay = overlay
@@ -247,12 +247,12 @@ final class MenubarCoordinator {
         recordingOverlay.onStop = { [weak self] in
             guard let self else { return }
             Task { @MainActor in
-                await self.handleStopRequested()
+                await self.requestStop()
             }
         }
     }
 
-    private func handleStopRequested() async {
+    func requestStop() async {
         do {
             let result = try await session.stop()
             pasteboard.copy(fileURL: result.outputURL)
