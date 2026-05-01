@@ -29,6 +29,12 @@ enum GifDecoder {
         }
 
         let frameCount = CGImageSourceGetCount(source)
+        // NOTE: the emptyFrameCount path is reachable in principle (e.g. a
+        // corrupt GIF whose header ImageIO accepts but which contains no Image
+        // Descriptor blocks). In practice, synthesising such a file in tests
+        // is impractical: minimal hand-written GIF89a payloads that omit frame
+        // data cause ImageIO to reject the type entirely (typeMismatch), never
+        // reaching this guard. See GifDecoderTests.swift for context.
         guard frameCount > 0 else {
             throw GifDecoderError.emptyFrameCount
         }
