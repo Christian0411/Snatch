@@ -33,10 +33,11 @@ Secondarily: **simplicity**. One Xcode project, no Electron, no FFmpeg pipeline,
 - **Encoder**: [gifski](https://github.com/ImageOptim/gifski) (Rust, statically linked via C FFI)
 - **Min OS**: macOS 14 (Sonoma)
 - **Build**:
-  - One Xcode project — `Snatch.xcodeproj`
-  - No third-party SPM dependencies
-  - gifski vendored as `vendor/gifski/libgifski.a` (built once via `cargo build --release`; build script in `scripts/build-gifski.sh`)
-  - Static lib + C bridging header in target
+  - **Phase 1 (M1–M2, engine layer)**: Pure Swift Package Manager. `Package.swift` declares 4 targets — `CGifski` (systemLibrary wrapper around `vendor/gifski/`), `SnatchKit` (library), `SnatchCLI` (executable), `SnatchKitTests`. Run with `swift build`, `swift test`, `swift run snatch-cli`.
+  - **Phase 2 (M3+, app layer)**: One Xcode project — `Snatch.xcodeproj` — added when AppKit/SwiftUI app target is needed. The Swift Package layout maps cleanly to Xcode targets.
+  - No third-party SPM dependencies on Swift packages (no `Package.resolved`).
+  - gifski vendored as `vendor/gifski/libgifski.a` (~21 MB committed binary). Built once via `scripts/build-gifski.sh` against `https://github.com/ImageOptim/gifski` at a pinned tag (currently `1.32.0`). At this version the C API lives in the root crate (not under `gifski-api/`), and `cargo build --release --no-default-features` produces the static lib without pulling in CLI deps.
+  - C bridging via `vendor/gifski/module.modulemap` (`module CGifski { header "gifski.h" link "gifski" export * }`); SnatchKit links with `unsafeFlags(["-L", "vendor/gifski", "-lgifski"])`.
 
 ## 4. UX — locked decisions
 
@@ -91,6 +92,9 @@ Single Swift app, `LSUIElement = true` (menubar-only, no Dock icon). One `.app` 
 - **`captureQueue`** (serial, QoS `.userInteractive`): receives `CMSampleBuffer`s from SCStream's delegate; runs format conversion (CVPixelBuffer → tightly packed RGBA bytes).
 - **`encoderQueue`** (serial, QoS `.userInitiated`): wraps gifski's blocking `gifski_add_frame_rgba` calls.
 - **Bridge** between the two: a bounded queue of capacity 60 frames (2 s at 30 fps). On overflow, the *oldest* frame is dropped and a warning is logged. Frame drops signal that the encoder briefly fell behind on a huge region; they are graceful degradation, not a fatal error.
+- **`GifskiEncoder.finish()` async-but-blocking semantics**: declared `async throws`, but internally calls `gifski_finish` which blocks the calling thread until pending frames drain. M4's `RecordingSession.stop()` must schedule this on `encoderQueue` (or wrap in `Task.detached { await encoder.finish() }`) — never call it from the main actor. M1's CLI bridges via `DispatchGroup` from a `Task`, which is acceptable for a short-lived process but not for the menubar app.
+- **`GifskiEncoder.cancel()` may briefly block**: `gifski_finish` (the only handle-deallocation path in the vendored gifski 1.32.0; `gifski_drop` is absent) drains queued frames before returning. Latency is bounded by the number of frames in flight — fast for empty/small recordings, longer for partial captures.
+- **Encoder thread-safety**: `GifskiEncoder` is not internally synchronized. `addFrame`, `finish`, and `cancel` all mutate `gifskiPtr` and must be called from a single serial queue (`encoderQueue`).
 
 ### Pre-warm strategy (hotkey-to-cropper latency target)
 
@@ -217,6 +221,10 @@ func cancel()                 // discards writer, deletes partial output
 
 - Output is written to `<finalURL>.partial` and atomically `rename(2)`'d to `<finalURL>` on `finish()`.
 - On `cancel()`, the `.partial` is `unlink(2)`'d.
+- **Thread-safety contract** (see §5): not internally synchronized; all methods must be invoked from a single serial encoder queue.
+- **`fps` parameter**: reserved for downstream capture coordination; gifski itself derives playback timing from per-frame `presentationTime` values supplied to `addFrame`. Currently unused inside the encoder. M2 may either remove the parameter (and update callers) or wire it through to `SCStreamConfiguration.minimumFrameInterval` on the capture side. Pick one and update this section.
+- **CVPixelBuffer row stride** (M2 concern): ScreenCaptureKit's `CVPixelBuffer` frames may have row padding (`bytesPerRow > width × 4`). The current `RGBAFrame` contract is tightly packed (no padding). M2's `FrameConverter` must strip padding during conversion. Alternative: add a `GifskiEncoder.addFrame(stride:)` overload using `gifski_add_frame_rgba_stride` (already present in the vendored C API). Strip-on-convert is the simpler path; reconsider if the Accelerate/vImage byte-swap is shown to be a hotspot.
+- **`gifski_drop` is absent** in gifski 1.32.0; `gifski_finish` is the only handle-deallocation path. The wrapper's `cancel()` calls `gifski_finish` then unlinks the partial file. `deinit` is intentionally a no-op (calling `gifski_finish` there would delete the partial file before `cancel()`-style assertions could observe it). Callers MUST call `cancel()` or `finish()`; abandoned encoders orphan gifski's worker threads (crossbeam channels + rayon pool) until process exit. Acceptable for M1's short-lived CLI; revisit in M4 (Coordinator) where multiple sessions share a process.
 
 ### UI layer
 
@@ -506,11 +514,31 @@ Every component above marked ✅ for unit testing follows the Superpowers `test-
 
 These are the build phases — to be refined into concrete tasks by the writing-plans skill. The pattern is **inner pipeline first, UI around it last**:
 
-### M1 — Encoder smoke test
-gifski FFI bridging works. From a CLI test harness, produce a valid GIF from N RGBA frames in `Tests/Fixtures/`. No capture, no UI. Validates the build setup, vendored `libgifski.a`, bridging header, and the `GifskiEncoder` wrapper.
+### M1 — Encoder smoke test ✅ Complete
+**Tag:** `m1-encoder-smoke-test` · **Commit:** `c4e53d7` · **Tests:** 11/11 unit passing · **Smoke:** `swift run snatch-cli Tests/SnatchKitTests/Fixtures /tmp/out.gif 30` produces a valid 1.2 KB animated GIF.
+
+gifski FFI bridging works. CLI test harness produces a valid GIF from N RGBA frames in `Tests/SnatchKitTests/Fixtures/`. No capture, no UI. Available primitives for downstream milestones:
+- `RGBAFrame` (`Sendable, Equatable`) — tightly-packed RGBA8 frame
+- `ScalePreset` (`String, Codable, CaseIterable`, default `.standard`) — capture-time scale enum
+- `GifskiEncoder` — `init(outputURL:fps:quality:) throws`, `addFrame(_:presentationTime:) throws`, `finish() async throws`, `cancel()`; partial-file lifecycle with atomic rename on success and unlink on cancel
+- `GifskiEncoderError: LocalizedError` — descriptive errors for each failure mode
+- `vendor/gifski/libgifski.a` + `gifski.h` + `module.modulemap` — vendored gifski 1.32.0, statically linked
+- `scripts/check-prereqs.sh` and `scripts/build-gifski.sh` — reproducible setup
+- Test helpers `PNGLoader` (PNG → `RGBAFrame`) and `GifDecoder` (GIF → frame-count + per-pixel accessor)
 
 ### M2 — Capture pipeline
 `SCStreamWrapper` + `FrameConverter` + bridge queue + `GifskiEncoder` end-to-end. A test runner records a fixed region for a fixed duration and produces a GIF on disk. Still no UI. Validates the streaming-encoder model and the **stop-latency** target.
+
+**Carry-overs from M1** (must be addressed during M2 — locked here so the M2 plan can fold them in):
+
+- **Decide on `fps` parameter of `GifskiEncoder.init`.** Currently accepted but unused (gifski derives timing from per-frame `presentationTime`). Either remove the parameter and update `Tests/SnatchKitTests/GifskiEncoderTests.swift` + `Sources/SnatchCLI/main.swift` callers, OR wire it through to `SCStreamConfiguration.minimumFrameInterval` on the capture side and document the contract.
+- **Stride handling for `CVPixelBuffer`** (the load-bearing M2 design choice). `RGBAFrame`'s contract is "tightly packed, no row padding"; ScreenCaptureKit's `CVPixelBuffer` typically has `bytesPerRow > width × 4`. Either strip stride during `FrameConverter.convert(...)` (via `vImage` copy with explicit stride conversion) or extend `GifskiEncoder` with an overload using `gifski_add_frame_rgba_stride` (already present in the vendored C API). Strip-on-convert is the simpler path and keeps `RGBAFrame` honest about its name.
+- **Schedule `GifskiEncoder.finish()` off the calling thread.** It's declared `async throws` but internally calls `gifski_finish` which blocks. M2's test runner should call it via `Task.detached { try await encoder.finish() }` (or schedule on a serial `encoderQueue`). The class doc comment on `finish()` already flags this; don't regress it.
+- **Document the encoder thread-safety contract** explicitly. `addFrame` / `finish` / `cancel` all mutate `gifskiPtr` and must run on a single serial queue. Add a `// MARK: - Threading` block at the top of `GifskiEncoder.swift` stating this. The bridge queue and `encoderQueue` from §5 are how M2 enforces it.
+- **Replace `Sources/SnatchKit/SnatchKit.swift` placeholder.** It currently contains only a comment `// SnatchKit — types added in Tasks 4-7`. Once M2's `SCStreamWrapper` and `FrameConverter` exist, either delete this file or repurpose it as the public umbrella header.
+- **Test-helper hardening.** Replace force-unwrap in `Tests/SnatchKitTests/PNGLoader.swift:fixture()` with `XCTFail`. Replace `precondition(frameCount > 0)` in `Tests/SnatchKitTests/GifDecoder.swift` with a throw. Both currently crash the test process on bad fixtures rather than reporting clean failures.
+- **`.gitignore` negation rule for reference fixtures.** `*.gif` is globally ignored (line 29 of `.gitignore`). If M2 adds a reference-GIF fixture under `Tests/SnatchKitTests/Fixtures/`, add a negation rule (`!Tests/SnatchKitTests/Fixtures/*.gif`) at the same time so the fixture is tracked.
+- **Stay on Swift Package Manager for M2.** No `Snatch.xcodeproj` yet — Xcode project transition is M3 work.
 
 ### M3 — Cropper UI
 Transparent `NSWindow` overlay. Drag rectangle, 8 resize handles, dimensions label, Record button, Space/Enter/Esc handling, region persistence. No recording yet — emits "user wants to record region X" to a console.
