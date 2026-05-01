@@ -131,4 +131,51 @@ final class RecordingSessionTests: XCTestCase {
 
         XCTAssertEqual(result.droppedFrames, 17)
     }
+
+    @MainActor
+    func test_cancel_fromIdle_isNoOp() async {
+        let session = makeSession()
+        XCTAssertEqual(session.state, .idle)
+
+        await session.cancel()
+
+        XCTAssertEqual(session.state, .idle)
+        XCTAssertEqual(pipeline.cancelCallCount, 0,
+                       "pipeline.cancel must not be called when session is idle")
+        XCTAssertEqual(pipeline.startCalls.count, 0)
+        XCTAssertEqual(pipeline.stopCallCount, 0)
+    }
+
+    @MainActor
+    func test_cancel_fromRecording_transitionsToIdleAndCallsPipelineCancel() async throws {
+        let session = makeSession()
+        try await session.start(
+            region: CGRect(x: 0, y: 0, width: 100, height: 100),
+            scale: .standard, fps: 30,
+            outputURL: URL(fileURLWithPath: "/tmp/m4.gif"),
+            excludingWindows: []
+        )
+        XCTAssertEqual(session.state, .recording)
+
+        await session.cancel()
+
+        XCTAssertEqual(session.state, .idle)
+        XCTAssertEqual(pipeline.cancelCallCount, 1)
+    }
+
+    @MainActor
+    func test_cancel_fromRecording_doesNotCallPipelineStop() async throws {
+        let session = makeSession()
+        try await session.start(
+            region: CGRect(x: 0, y: 0, width: 100, height: 100),
+            scale: .standard, fps: 30,
+            outputURL: URL(fileURLWithPath: "/tmp/m4.gif"),
+            excludingWindows: []
+        )
+
+        await session.cancel()
+
+        XCTAssertEqual(pipeline.stopCallCount, 0,
+                       "cancel must use pipeline.cancel, not pipeline.stop")
+    }
 }

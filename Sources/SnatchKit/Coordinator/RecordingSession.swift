@@ -116,9 +116,22 @@ public final class RecordingSession: ObservableObject {
 
     /// Cancel. From `.idle` this is a no-op. From `.recording` transitions
     /// through `.cancelling → .idle`, calling `pipeline.cancel()` to tear
-    /// down capture and unlink the `.partial`. Implementation lands in Task 7.
+    /// down capture and unlink the `.partial`. M5 will wire the user-facing cancel
+    /// trigger via the Carbon Esc hotkey.
     public func cancel() async {
-        Log.coordinator.info("cancel ignored from state \(String(describing: self.state), privacy: .public) (Task 7 will implement)")
-        // Filled in by Task 7.
+        switch state {
+        case .idle:
+            Log.coordinator.info("cancel from .idle (no-op)")
+            return
+        case .recording:
+            state = .cancelling
+            Log.coordinator.info("state .recording → .cancelling")
+            await pipeline.cancel()
+            state = .idle
+            Log.coordinator.info("state .cancelling → .idle")
+        case .finalizing, .cancelling:
+            Log.coordinator.info("cancel ignored from state \(String(describing: self.state), privacy: .public)")
+            return
+        }
     }
 }
