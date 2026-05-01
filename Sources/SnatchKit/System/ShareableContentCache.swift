@@ -47,6 +47,21 @@ public final class ShareableContentCache {
         ourWindowNumbers.contains(window.windowNumber)
     }
 
+    /// Register overlay window numbers that don't correspond to a single
+    /// NSWindow reference (e.g., `RecordingOverlayWindow` coordinator wrapping
+    /// multiple private NSWindows). Must be called after the windows are on-
+    /// screen so their windowNumbers are valid (> 0).
+    public func addWindowNumbers(_ numbers: [Int]) {
+        for n in numbers where n > 0 {
+            ourWindowNumbers.insert(n)
+        }
+    }
+
+    /// Returns true when all `numbers` are already registered for exclusion.
+    public func containsWindowNumbers(_ numbers: [Int]) -> Bool {
+        numbers.allSatisfy { ourWindowNumbers.contains($0) }
+    }
+
     /// Async refresh from `SCShareableContent.current`. Errors are
     /// captured on `lastRefreshError`; the cache retains its previous
     /// value on failure (stale-but-usable).
