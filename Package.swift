@@ -8,7 +8,7 @@ let package = Package(
         .library(name: "SnatchKit", targets: ["SnatchKit"]),
         .executable(name: "snatch-cli", targets: ["SnatchCLI"]),
         .executable(name: "snatch-record-cli", targets: ["SnatchRecordCLI"]),
-        .executable(name: "snatch-cropper-cli", targets: ["SnatchCropperCLI"]),
+        .executable(name: "snatch-session-cli", targets: ["SnatchSessionCLI"]),
     ],
     targets: [
         .systemLibrary(
@@ -42,9 +42,9 @@ let package = Package(
             path: "Sources/SnatchRecordCLI"
         ),
         .executableTarget(
-            name: "SnatchCropperCLI",
+            name: "SnatchSessionCLI",
             dependencies: ["SnatchKit"],
-            path: "Sources/SnatchCropperCLI"
+            path: "Sources/SnatchSessionCLI"
         ),
     ]
 )

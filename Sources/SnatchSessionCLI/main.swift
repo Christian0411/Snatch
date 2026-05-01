@@ -1,4 +1,4 @@
-// Sources/SnatchCropperCLI/main.swift
+// Sources/SnatchSessionCLI/main.swift
 //
 // snatch-cropper-cli — full-screen cropper UI smoke harness for M3.
 //
