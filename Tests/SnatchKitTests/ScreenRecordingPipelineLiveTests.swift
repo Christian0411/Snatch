@@ -38,7 +38,11 @@ final class ScreenRecordingPipelineLiveTests: XCTestCase {
         XCTAssertGreaterThan(size, 100,
                              "GIF file size suspiciously small: \(size) bytes")
 
-        // Decode + sanity-check frame count.
+        // Decode + sanity-check frame count. Note: SCStreamConfiguration.minimumFrameInterval
+        // is a *minimum* — SCKit only emits frames when content changes, so a static-screen
+        // capture (no cursor movement, no animations) can produce as few as 1 frame even at
+        // 30fps. The test asserts >= 1 to verify the pipeline produced *some* valid output;
+        // tighter frame-rate checks would be flaky in headless / non-interactive runs.
         let decodedGif = try GifDecoder.decode(outputURL)
         XCTAssertGreaterThanOrEqual(decodedGif.frameCount, 1,
                                      "expected at least 1 frame in capture, got \(decodedGif.frameCount)")
