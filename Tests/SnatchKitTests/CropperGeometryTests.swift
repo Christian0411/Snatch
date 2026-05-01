@@ -123,4 +123,48 @@ final class CropperGeometryTests: XCTestCase {
             .topLeft
         )
     }
+
+    // MARK: - resize(_:handle:dragDelta:)
+
+    func test_resize_topLeftHandle_movesOriginAndShrinksFromTopLeft() {
+        let r = CGRect(x: 100, y: 100, width: 200, height: 100)
+        let out = CropperGeometry.resize(r, handle: .topLeft, dragDelta: CGSize(width: 20, height: 30))
+        // top-left moves to (120,130); bottom-right stays at (300,200)
+        XCTAssertEqual(out, CGRect(x: 120, y: 130, width: 180, height: 70))
+    }
+
+    func test_resize_rightHandle_extendsWidthOnly() {
+        let r = CGRect(x: 100, y: 100, width: 200, height: 100)
+        let out = CropperGeometry.resize(r, handle: .right, dragDelta: CGSize(width: 50, height: 999))
+        // dy is ignored for an edge-handle drag
+        XCTAssertEqual(out, CGRect(x: 100, y: 100, width: 250, height: 100))
+    }
+
+    func test_resize_bottomHandle_extendsHeightOnly() {
+        let r = CGRect(x: 100, y: 100, width: 200, height: 100)
+        let out = CropperGeometry.resize(r, handle: .bottom, dragDelta: CGSize(width: 999, height: 25))
+        XCTAssertEqual(out, CGRect(x: 100, y: 100, width: 200, height: 125))
+    }
+
+    func test_resize_bottomRightHandle_extendsBothAxes() {
+        let r = CGRect(x: 100, y: 100, width: 200, height: 100)
+        let out = CropperGeometry.resize(r, handle: .bottomRight, dragDelta: CGSize(width: 50, height: 30))
+        XCTAssertEqual(out, CGRect(x: 100, y: 100, width: 250, height: 130))
+    }
+
+    func test_resize_body_translatesWholeRect() {
+        let r = CGRect(x: 100, y: 100, width: 200, height: 100)
+        let out = CropperGeometry.resize(r, handle: .body, dragDelta: CGSize(width: -40, height: 60))
+        XCTAssertEqual(out, CGRect(x: 60, y: 160, width: 200, height: 100))
+    }
+
+    func test_resize_topLeftHandle_draggedPastBottomRight_normalizesToPositiveExtent() {
+        // Drag the top-left corner so far down-and-right that it crosses the
+        // bottom-right corner. Result should still be a positive-extent rect.
+        let r = CGRect(x: 100, y: 100, width: 200, height: 100)
+        let out = CropperGeometry.resize(r, handle: .topLeft, dragDelta: CGSize(width: 250, height: 150))
+        // top-left moves to (350, 250); bottom-right stays at (300, 200).
+        // Normalized: origin (300, 200), size (50, 50).
+        XCTAssertEqual(out, CGRect(x: 300, y: 200, width: 50, height: 50))
+    }
 }

@@ -72,4 +72,46 @@ public enum CropperGeometry {
         }
         return nil
     }
+
+    // MARK: - Resize
+
+    /// Apply `dragDelta` to `original`, anchoring per `handle`. Corner handles
+    /// move both adjacent edges; edge handles move only one edge; `.body`
+    /// translates the whole rect. The result is always a positive-extent
+    /// (normalized) rect — if a corner drag crosses past the opposite corner,
+    /// the rect flips and stays normalized, matching `rect(from:to:)` semantics.
+    public static func resize(
+        _ original: CGRect,
+        handle: CropperHandle,
+        dragDelta: CGSize
+    ) -> CGRect {
+        if handle == .body {
+            return original.offsetBy(dx: dragDelta.width, dy: dragDelta.height)
+        }
+
+        var minX = original.minX
+        var minY = original.minY
+        var maxX = original.maxX
+        var maxY = original.maxY
+        let dx = dragDelta.width
+        let dy = dragDelta.height
+
+        switch handle {
+        case .topLeft:     minX += dx; minY += dy
+        case .top:                     minY += dy
+        case .topRight:    maxX += dx; minY += dy
+        case .left:        minX += dx
+        case .right:       maxX += dx
+        case .bottomLeft:  minX += dx; maxY += dy
+        case .bottom:                  maxY += dy
+        case .bottomRight: maxX += dx; maxY += dy
+        case .body:        fatalError("unreachable — handled above")
+        }
+
+        let nx = min(minX, maxX)
+        let ny = min(minY, maxY)
+        let nw = abs(maxX - minX)
+        let nh = abs(maxY - minY)
+        return CGRect(x: nx, y: ny, width: nw, height: nh)
+    }
 }
