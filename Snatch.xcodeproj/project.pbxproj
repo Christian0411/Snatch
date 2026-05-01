@@ -10,8 +10,11 @@
 		AD1A06BD2FA54C6900E3D2EB /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD1A06B72FA54C6900E3D2EB /* AppDelegate.swift */; };
 		AD1A06BE2FA54C6900E3D2EB /* SnatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD1A06BB2FA54C6900E3D2EB /* SnatchApp.swift */; };
 		AD1A06BF2FA54C6900E3D2EB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AD1A06B82FA54C6900E3D2EB /* Assets.xcassets */; };
-		AD1A06C02FA54C6900E3D2EB /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = AD1A06B92FA54C6900E3D2EB /* Info.plist */; };
 		AD1A06C32FA54F1500E3D2EB /* SnatchAppKit in Frameworks */ = {isa = PBXBuildFile; productRef = AD1A06C22FA54F1500E3D2EB /* SnatchAppKit */; };
+		AD1A06C52FA5518400E3D2EB /* MenubarCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD1A06C42FA5518400E3D2EB /* MenubarCoordinator.swift */; };
+		AD1A06C92FA551A100E3D2EB /* PasteboardWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD1A06C82FA551A100E3D2EB /* PasteboardWriter.swift */; };
+		AD1A06CA2FA551A100E3D2EB /* HotkeyRegistrar.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD1A06C62FA551A100E3D2EB /* HotkeyRegistrar.swift */; };
+		AD1A06CB2FA551A100E3D2EB /* NotificationPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD1A06C72FA551A100E3D2EB /* NotificationPresenter.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -37,6 +40,10 @@
 		AD1A06B92FA54C6900E3D2EB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		AD1A06BA2FA54C6900E3D2EB /* Snatch.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Snatch.entitlements; sourceTree = "<group>"; };
 		AD1A06BB2FA54C6900E3D2EB /* SnatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnatchApp.swift; sourceTree = "<group>"; };
+		AD1A06C42FA5518400E3D2EB /* MenubarCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenubarCoordinator.swift; sourceTree = "<group>"; };
+		AD1A06C62FA551A100E3D2EB /* HotkeyRegistrar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotkeyRegistrar.swift; sourceTree = "<group>"; };
+		AD1A06C72FA551A100E3D2EB /* NotificationPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationPresenter.swift; sourceTree = "<group>"; };
+		AD1A06C82FA551A100E3D2EB /* PasteboardWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasteboardWriter.swift; sourceTree = "<group>"; };
 		AD9CEB212FA54B2600EA20C6 /* Snatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Snatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AD9CEB312FA54B2800EA20C6 /* SnatchTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SnatchTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		AD9CEB3B2FA54B2800EA20C6 /* SnatchUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SnatchUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -85,6 +92,9 @@
 		AD1A06B52FA54C6900E3D2EB /* System */ = {
 			isa = PBXGroup;
 			children = (
+				AD1A06C62FA551A100E3D2EB /* HotkeyRegistrar.swift */,
+				AD1A06C72FA551A100E3D2EB /* NotificationPresenter.swift */,
+				AD1A06C82FA551A100E3D2EB /* PasteboardWriter.swift */,
 			);
 			path = System;
 			sourceTree = "<group>";
@@ -108,6 +118,7 @@
 				AD1A06B92FA54C6900E3D2EB /* Info.plist */,
 				AD1A06BA2FA54C6900E3D2EB /* Snatch.entitlements */,
 				AD1A06BB2FA54C6900E3D2EB /* SnatchApp.swift */,
+				AD1A06C42FA5518400E3D2EB /* MenubarCoordinator.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -246,7 +257,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				AD1A06BF2FA54C6900E3D2EB /* Assets.xcassets in Resources */,
-				AD1A06C02FA54C6900E3D2EB /* Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -272,7 +282,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				AD1A06BD2FA54C6900E3D2EB /* AppDelegate.swift in Sources */,
+				AD1A06C52FA5518400E3D2EB /* MenubarCoordinator.swift in Sources */,
 				AD1A06BE2FA54C6900E3D2EB /* SnatchApp.swift in Sources */,
+				AD1A06C92FA551A100E3D2EB /* PasteboardWriter.swift in Sources */,
+				AD1A06CA2FA551A100E3D2EB /* HotkeyRegistrar.swift in Sources */,
+				AD1A06CB2FA551A100E3D2EB /* NotificationPresenter.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -430,14 +444,14 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = "";
 				CODE_SIGN_ENTITLEMENTS = App/Snatch.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 8E765EZVAM;
-				ENABLE_APP_SANDBOX = YES;
+				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -449,7 +463,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = co.snatch.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -467,14 +481,14 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = "";
 				CODE_SIGN_ENTITLEMENTS = App/Snatch.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 8E765EZVAM;
-				ENABLE_APP_SANDBOX = YES;
+				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -486,7 +500,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = co.snatch.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
