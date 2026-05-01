@@ -68,10 +68,11 @@ public final class CropperView: NSView {
 
         guard let rect = state.displayRect else { return }
 
-        // 2. Rectangle outline.
+        // 2. Rectangle outline (dashed — matches macOS native screenshot tool).
         NSColor.white.setStroke()
         let outline = NSBezierPath(rect: rect)
         outline.lineWidth = 1
+        outline.setLineDash([6, 4], count: 2, phase: 0)
         outline.stroke()
 
         // 3. Resize handles (only when committed or while resizing — not
