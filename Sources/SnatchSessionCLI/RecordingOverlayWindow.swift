@@ -30,10 +30,12 @@ final class RecordingOverlayWindow: NSWindow {
         let windowFrame = region.insetBy(dx: -inset, dy: -inset)
 
         // Convert from CG coords (top-left origin) to AppKit coords (bottom-left
-        // origin) for the NSWindow init. NSScreen.main.frame.height gives the
-        // primary screen's logical height; M5 multi-display will need to pick the
-        // correct screen.
-        let screenHeight = NSScreen.main?.frame.height ?? 0
+        // origin) for the NSWindow init.
+        // NSScreen.screens.first is the PRIMARY display (the one with the
+        // menu bar). Its origin is also the AppKit coordinate-system origin,
+        // so its height is the right divisor for CG → AppKit y-flip.
+        // M5 multi-display: pick the screen containing `region`.
+        let screenHeight = NSScreen.screens.first?.frame.height ?? 0
         let appKitFrame = NSRect(
             x: windowFrame.origin.x,
             y: screenHeight - windowFrame.maxY,
@@ -123,11 +125,10 @@ private final class RecordingOverlayView: NSView {
     }
 
     /// Pass clicks through everywhere except the Stop button.
+    /// `point` is already in our local coordinate space — we are the window's
+    /// content view, so AppKit calls hitTest with point in our own coords.
     override func hitTest(_ point: NSPoint) -> NSView? {
-        // `point` is in our SUPERVIEW's coords (window content view); convert
-        // to our local space for the button-frame check.
-        let local = convert(point, from: superview)
-        if stopButton.frame.contains(local) {
+        if stopButton.frame.contains(point) {
             return stopButton
         }
         return nil
