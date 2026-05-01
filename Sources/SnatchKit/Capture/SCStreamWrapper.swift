@@ -52,11 +52,15 @@ public final class SCStreamWrapper {
     ///   - fps: target capture rate; mapped to `minimumFrameInterval`.
     ///   - queue: the `sampleHandlerQueue` for SCStream's delegate. Conversion
     ///     is expected to run on this queue per spec §5.
+    ///   - excludingWindows: SCWindow handles to exclude from the
+    ///     `SCContentFilter`. M4 uses this to keep the cropper and recording
+    ///     overlay windows out of the captured GIF (spec §6). Default `[]`.
     public func start(
         region: CGRect,
         scale: ScalePreset,
         fps: Int,
-        queue: DispatchQueue
+        queue: DispatchQueue,
+        excludingWindows: [SCWindow] = []
     ) async throws -> AsyncStream<CMSampleBuffer> {
 
         guard CGPreflightScreenCaptureAccess() else {
@@ -85,7 +89,7 @@ public final class SCStreamWrapper {
             throw SCStreamWrapperError.displayNotFound(region: region)
         }
 
-        let filter = SCContentFilter(display: display, excludingWindows: [])
+        let filter = SCContentFilter(display: display, excludingWindows: excludingWindows)
 
         let outputSize = Self.outputSize(for: region, scale: scale, displayScale: Self.backingScaleFactor(for: display))
         let config = SCStreamConfiguration()
