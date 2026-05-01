@@ -13,6 +13,10 @@ public final class BridgeQueue<T>: @unchecked Sendable {
     private let lock = NSLock()
     private var buffer: [T] = []
     private var _droppedCount: Int = 0
+    private var _isClosed: Bool = false
+    /// Counts items available for dequeue. `signal()` once per enqueue and
+    /// once per `close()` to wake any waiting dequeuer.
+    private let availability = DispatchSemaphore(value: 0)
     public let capacity: Int
 
     public init(capacity: Int) {
@@ -30,23 +34,31 @@ public final class BridgeQueue<T>: @unchecked Sendable {
         lock.withLock { buffer.count }
     }
 
+    /// Whether the queue has been closed.
+    public var isClosed: Bool {
+        lock.withLock { _isClosed }
+    }
+
     /// Push an item. If the buffer is at capacity, the oldest is removed
     /// (FIFO eviction) and `droppedCount` is incremented.
     /// Returns the new dropped-count *after* the call (useful for one-shot logging).
     @discardableResult
     public func enqueue(_ item: T) -> Int {
-        lock.withLock {
+        let shouldSignal = lock.withLock { () -> Bool in
+            if _isClosed { return false }
             if capacity == 0 {
                 _droppedCount += 1
-                return _droppedCount
+                return false
             }
             if buffer.count >= capacity {
                 buffer.removeFirst()
                 _droppedCount += 1
             }
             buffer.append(item)
-            return _droppedCount
+            return true
         }
+        if shouldSignal { availability.signal() }
+        return droppedCount
     }
 
     /// Pop the oldest item, or nil if empty.
@@ -63,6 +75,40 @@ public final class BridgeQueue<T>: @unchecked Sendable {
             let out = buffer
             buffer.removeAll(keepingCapacity: true)
             return out
+        }
+    }
+
+    /// Blocks until an item is available, or returns nil after `close()`
+    /// has been called and the queue has drained.
+    public func dequeueBlocking() -> T? {
+        availability.wait()
+        return lock.withLock { () -> T? in
+            if !buffer.isEmpty {
+                return buffer.removeFirst()
+            }
+            // Closed + empty: re-signal so any other waiters also wake.
+            if _isClosed { availability.signal() }
+            return nil
+        }
+    }
+
+    /// Marks the queue closed. Any blocked dequeuers wake; subsequent
+    /// `enqueue` calls are silently rejected. Items already in the buffer
+    /// are still delivered by `dequeueBlocking` until the buffer drains.
+    public func close() {
+        let wasClosed = lock.withLock { () -> Bool in
+            if _isClosed { return true }
+            _isClosed = true
+            return false
+        }
+        if !wasClosed { availability.signal() }
+    }
+
+    /// Empties the buffer without delivering. Call before `close()` for
+    /// the cancel path where in-flight items must not reach the consumer.
+    public func drainAndDiscard() {
+        lock.withLock {
+            buffer.removeAll(keepingCapacity: true)
         }
     }
 }
