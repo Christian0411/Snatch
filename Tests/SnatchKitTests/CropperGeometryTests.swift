@@ -38,4 +38,39 @@ final class CropperGeometryTests: XCTestCase {
         )
         XCTAssertEqual(r, CGRect(x: -100, y: -50, width: 100, height: 50))
     }
+
+    // MARK: - handleFrames(for:handleSize:)
+
+    func test_handleFrames_returnsAllEightResizeHandles() {
+        let r = CGRect(x: 100, y: 100, width: 200, height: 100)
+        let frames = CropperGeometry.handleFrames(for: r, handleSize: 12)
+        XCTAssertEqual(Set(frames.keys), Set(CropperHandle.resizeCases))
+    }
+
+    func test_handleFrames_topLeftHandle_isCenteredOnRectTopLeftCorner() {
+        let r = CGRect(x: 100, y: 100, width: 200, height: 100)
+        let frames = CropperGeometry.handleFrames(for: r, handleSize: 12)
+        // Handle is 12×12 centered on (100,100) → origin (94,94)
+        XCTAssertEqual(frames[.topLeft], CGRect(x: 94, y: 94, width: 12, height: 12))
+    }
+
+    func test_handleFrames_bottomRightHandle_isCenteredOnRectBottomRightCorner() {
+        let r = CGRect(x: 100, y: 100, width: 200, height: 100)
+        let frames = CropperGeometry.handleFrames(for: r, handleSize: 12)
+        // Bottom-right corner of r is (300, 200) → handle origin (294, 194)
+        XCTAssertEqual(frames[.bottomRight], CGRect(x: 294, y: 194, width: 12, height: 12))
+    }
+
+    func test_handleFrames_topEdgeHandle_isCenteredOnTopMidpoint() {
+        let r = CGRect(x: 100, y: 100, width: 200, height: 100)
+        let frames = CropperGeometry.handleFrames(for: r, handleSize: 12)
+        // Top midpoint is (200, 100) → handle origin (194, 94)
+        XCTAssertEqual(frames[.top], CGRect(x: 194, y: 94, width: 12, height: 12))
+    }
+
+    func test_handleFrames_doesNotIncludeBodyCase() {
+        let r = CGRect(x: 100, y: 100, width: 200, height: 100)
+        let frames = CropperGeometry.handleFrames(for: r, handleSize: 12)
+        XCTAssertNil(frames[.body])
+    }
 }

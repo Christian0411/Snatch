@@ -18,4 +18,34 @@ public enum CropperGeometry {
         let h = abs(current.y - anchor.y)
         return CGRect(x: x, y: y, width: w, height: h)
     }
+
+    // MARK: - Handle frames
+
+    /// Frame (origin + size) of each resize handle on `rect`, keyed by the
+    /// handle case. Each handle is `handleSize × handleSize` and centered on
+    /// the corresponding corner / edge midpoint of `rect`. The `.body` case
+    /// has no rendered handle and is intentionally absent from the result.
+    public static func handleFrames(
+        for rect: CGRect,
+        handleSize: CGFloat
+    ) -> [CropperHandle: CGRect] {
+        let half = handleSize / 2
+        let cx = rect.midX
+        let cy = rect.midY
+
+        func frame(centeredAt p: CGPoint) -> CGRect {
+            CGRect(x: p.x - half, y: p.y - half, width: handleSize, height: handleSize)
+        }
+
+        return [
+            .topLeft:     frame(centeredAt: CGPoint(x: rect.minX, y: rect.minY)),
+            .top:         frame(centeredAt: CGPoint(x: cx,        y: rect.minY)),
+            .topRight:    frame(centeredAt: CGPoint(x: rect.maxX, y: rect.minY)),
+            .left:        frame(centeredAt: CGPoint(x: rect.minX, y: cy)),
+            .right:       frame(centeredAt: CGPoint(x: rect.maxX, y: cy)),
+            .bottomLeft:  frame(centeredAt: CGPoint(x: rect.minX, y: rect.maxY)),
+            .bottom:      frame(centeredAt: CGPoint(x: cx,        y: rect.maxY)),
+            .bottomRight: frame(centeredAt: CGPoint(x: rect.maxX, y: rect.maxY)),
+        ]
+    }
 }
