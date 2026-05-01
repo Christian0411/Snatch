@@ -20,7 +20,7 @@ public struct CropperState: Equatable, Sendable {
         case resizing(handle: CropperHandle, original: CGRect, anchor: CGPoint, current: CGPoint)
     }
 
-    public var mode: Mode
+    public private(set) var mode: Mode
 
     /// Initial state. `initial` is the persisted region from `RegionStore`,
     /// or nil on first launch.

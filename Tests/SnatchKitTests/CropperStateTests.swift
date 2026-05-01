@@ -136,4 +136,18 @@ final class CropperStateTests: XCTestCase {
         s = s.applyMouseUp(at: CGPoint(x: 200, y: 150))
         XCTAssertEqual(s.mode, .have(r))
     }
+
+    // MARK: - Lossy click-outside regression
+
+    func test_haveRect_clickOutsideWithoutDrag_revertsToIdle() {
+        // Click outside an existing rect with no drag should discard the rect
+        // (the click started a fresh drag that ended with zero extent → .idle).
+        // Manual smoke covers this; this test pins the behavior so a future
+        // refactor of applyMouseDown/Up can't regress it silently.
+        let r = CGRect(x: 100, y: 100, width: 200, height: 100)
+        var s = CropperState(initial: r)
+        s = s.applyMouseDown(at: CGPoint(x: 0, y: 0), handleSize: handleSize)
+        s = s.applyMouseUp(at: CGPoint(x: 0, y: 0))
+        XCTAssertEqual(s.mode, .idle)
+    }
 }
