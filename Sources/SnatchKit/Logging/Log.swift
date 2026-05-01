@@ -4,7 +4,7 @@ import os
 /// Snatch's unified-logging facade.
 ///
 /// Subsystem: `co.snatch.app` (per spec §8).
-/// Categories: capture, encoder, coordinator, ui, system.
+/// Categories: capture, encoder, coordinator, ui, system, menubar, permissions.
 ///
 /// Levels in use:
 ///   - `.info`  — state transitions, recording start/stop with region + scale
@@ -18,4 +18,6 @@ public enum Log {
     public static let coordinator = Logger(subsystem: subsystem, category: "coordinator")
     public static let ui = Logger(subsystem: subsystem, category: "ui")
     public static let system = Logger(subsystem: subsystem, category: "system")
+    public static let menubar = Logger(subsystem: subsystem, category: "menubar")
+    public static let permissions = Logger(subsystem: subsystem, category: "permissions")
 }
