@@ -1804,7 +1804,7 @@ git tag m2-capture-pipeline
 M2 ships when ALL of the following hold:
 
 1. `swift build` succeeds, no warnings.
-2. `swift test` shows green for all suites: `RGBAFrameTests` (2), `ScalePresetTests` (3), `FixtureTests` (2), `GifskiEncoderTests` (4), `BridgeQueueTests` (5), `FrameConverterTests` (4), `SCStreamWrapperHelperTests` (5), `PipelineIntegrationTests` (2). Live-capture suite skips by default. Total: 27 default + 1 gated = 28.
+2. `swift test` shows green for all suites: `RGBAFrameTests` (2), `ScalePresetTests` (3), `FixtureTests` (2), `GifskiEncoderTests` (5), `BridgeQueueTests` (5), `FrameConverterTests` (4), `SCStreamWrapperHelperTests` (5), `PipelineIntegrationTests` (2). Live-capture suite skips by default. Total: 28 default + 1 gated = 29.
 3. `swift run snatch-record-cli --duration 2 --output /tmp/m2.gif` produces a playable animated GIF on a Mac with Screen Recording permission. Stop-latency reported under 500 ms.
 4. M1 carry-overs from spec §10 are all addressed:
    - `fps` removed from `GifskiEncoder.init` ✓ (Task 1)
