@@ -17,6 +17,7 @@ final class MenubarCoordinator {
     let scaleStore: ScalePresetStore
     let recentsStore: RecentRecordingsStore
     let permissions: PermissionsCoordinator
+    let permissionAlerts: PermissionAlertPresenter
     let pasteboard: PasteboardWriter
     let notifier: NotificationPresenter
     let pathProvider: PathProvider
@@ -43,6 +44,7 @@ final class MenubarCoordinator {
         self.scaleStore = scaleStore
         self.recentsStore = recentsStore
         self.permissions = permissions
+        self.permissionAlerts = PermissionAlertPresenter()
         self.pasteboard = pasteboard
         self.notifier = notifier
         self.pathProvider = pathProvider
@@ -54,15 +56,22 @@ final class MenubarCoordinator {
     }
 
     func handleHotkey() {
-        // Permission gate
-        guard permissions.cachedState != .denied else {
-            // PermissionAlertPresenter call lands in Task 18.
+        if permissions.cachedState == .denied {
+            permissionAlerts.showDeniedAlert()
             return
         }
         if permissions.cachedState == .notDetermined {
-            // Permission request flow lands in Task 18.
+            Task { @MainActor in
+                let result = await permissions.request()
+                switch result {
+                case .granted:        self.permissionAlerts.showRelaunchAlert()
+                case .denied:         self.permissionAlerts.showDeniedAlert()
+                case .notDetermined:  self.permissionAlerts.showDeniedAlert()  // dismissed prompt
+                }
+            }
             return
         }
+        // Permission OK — route by session state:
         Task { @MainActor in
             switch session.state {
             case .idle:                           session.beginCropping()
