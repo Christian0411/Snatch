@@ -18,6 +18,10 @@ public enum GifskiEncoderError: Error, CustomStringConvertible {
     }
 }
 
+extension GifskiEncoderError: LocalizedError {
+    public var errorDescription: String? { description }
+}
+
 /// Streaming wrapper over gifski's C API. Output is written to <finalURL>.partial
 /// during encoding and atomically renamed to <finalURL> on `finish()`. `cancel()`
 /// unlinks the partial file.
@@ -34,6 +38,14 @@ public final class GifskiEncoder {
     private var nextFrameIndex: UInt32 = 0
     private var finished = false
 
+    /// Initialise a new gifski writer pointed at `<outputURL>.partial`.
+    ///
+    /// - Parameters:
+    ///   - outputURL: where the final GIF will land after `finish()`.
+    ///   - fps: reserved for downstream coordination (e.g. capture frame rate);
+    ///     gifski itself derives playback timing from per-frame `presentationTime`
+    ///     values supplied to `addFrame`. Default 30.
+    ///   - quality: gifski quality knob, 1–100. Default 90.
     public init(outputURL: URL, fps: Int = 30, quality: Int = 90) throws {
         self.outputURL = outputURL
         self.partialURL = URL(fileURLWithPath: outputURL.path + ".partial")
@@ -102,7 +114,12 @@ public final class GifskiEncoder {
         try FileManager.default.moveItem(at: partialURL, to: outputURL)
     }
 
-    /// Discard the writer and unlink the partial file. Safe to call after finish() or twice.
+    /// Discard the writer and unlink the partial file. Safe to call after `finish()` or twice.
+    ///
+    /// May briefly block while `gifski_finish` drains any frames already queued
+    /// in gifski's internal channels. For the M1 CLI use case this is fine; for
+    /// M4's `RecordingSession.cancel()` (called from a UI-adjacent path) the
+    /// blocking will need to be confined to a background queue.
     ///
     /// Implementation note: gifski has no `gifski_drop` in this version.
     /// We call `gifski_finish` to release the handle; with no frames submitted
