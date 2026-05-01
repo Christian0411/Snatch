@@ -36,6 +36,7 @@ Design docs and ADRs live in `docs/`. Authoritative sources:
 
 - **M1 — Encoder smoke test ✅ Complete** (tag `m1-encoder-smoke-test`, commit `c4e53d7`). 11/11 unit tests pass; CLI produces a valid GIF.
 - **M2 — Capture pipeline ✅ Complete** (tag `m2-capture-pipeline`). `SCStreamWrapper` + `FrameConverter` + `BridgeQueue` + `GifskiEncoder` end-to-end. `snatch-record-cli` records a region for a fixed duration and writes a GIF. Stop-latency measured well under the 500 ms target on M-series hardware.
-- **M3 — Cropper UI** is next. Transition to `Snatch.xcodeproj` happens here when AppKit/SwiftUI enter.
+- **M3 — Cropper UI ✅ Complete** (tag `m3-cropper-ui`). Pure cropper logic (`CropperHandle`, `CropperGeometry`, `CropperState`, `RegionStore`) lives in `SnatchKit` with full unit coverage. AppKit shell (`CropperWindow`, `CropperView`, `CropperRecordButton`, `AppDelegate`) lives in the new `SnatchCropperCLI` SPM target. Drag-to-create, 8 resize handles, body-drag-to-move, dimensions label, Record button, Space/Enter/Esc handling, region persistence across launches — all working.
+- **M4 — Coordinator wiring** is next. `RecordingSession` state machine integrates Cropper + Capture + Encoder. Click Record → records → click stop → GIF saved. Hotkey not yet hooked up; menubar minimal.
 
-We're on Swift Package Manager (`Package.swift`) for M1–M2; Xcode project arrives at M3 when AppKit/SwiftUI enters.
+We're on Swift Package Manager (`Package.swift`) for M1–M3. Xcode project transition was deferred from M3 to M5 — see `docs/superpowers/plans/2026-04-30-m3-cropper-ui.md` "Build system" rationale.
