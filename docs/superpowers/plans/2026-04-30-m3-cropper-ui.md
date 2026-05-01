@@ -1294,12 +1294,18 @@ import AppKit
 final class CropperWindow: NSWindow {
 
     init(screen: NSScreen) {
+        // NSWindow's only designated initializer is the 4-arg form
+        // `init(contentRect:styleMask:backing:defer:)`. The 5-arg
+        // `…:screen:` form is a convenience initializer and Swift
+        // forbids subclass `super.init` calls from chaining into
+        // convenience initializers. Passing `contentRect: screen.frame`
+        // (in screen-global coords) places the window on the right
+        // display either way.
         super.init(
             contentRect: screen.frame,
             styleMask: [.borderless],
             backing: .buffered,
-            defer: false,
-            screen: screen
+            defer: false
         )
 
         self.isOpaque = false
@@ -1485,12 +1491,13 @@ final class CropperWindow: NSWindow {
         let frame = screen.frame
         self.cropperView = CropperView(frame: NSRect(origin: .zero, size: frame.size), initialRegion: initialRegion)
 
+        // 4-arg designated initializer; see Task 9 note on why the
+        // 5-arg `…:screen:` convenience form can't be called here.
         super.init(
             contentRect: frame,
             styleMask: [.borderless],
             backing: .buffered,
-            defer: false,
-            screen: screen
+            defer: false
         )
 
         self.isOpaque = false
