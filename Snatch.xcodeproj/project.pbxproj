@@ -1,0 +1,639 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		AD1A06BD2FA54C6900E3D2EB /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD1A06B72FA54C6900E3D2EB /* AppDelegate.swift */; };
+		AD1A06BE2FA54C6900E3D2EB /* SnatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD1A06BB2FA54C6900E3D2EB /* SnatchApp.swift */; };
+		AD1A06BF2FA54C6900E3D2EB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AD1A06B82FA54C6900E3D2EB /* Assets.xcassets */; };
+		AD1A06C02FA54C6900E3D2EB /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = AD1A06B92FA54C6900E3D2EB /* Info.plist */; };
+		AD1A06C32FA54F1500E3D2EB /* SnatchAppKit in Frameworks */ = {isa = PBXBuildFile; productRef = AD1A06C22FA54F1500E3D2EB /* SnatchAppKit */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		AD9CEB322FA54B2800EA20C6 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AD9CEB192FA54B2600EA20C6 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = AD9CEB202FA54B2600EA20C6;
+			remoteInfo = Snatch;
+		};
+		AD9CEB3C2FA54B2800EA20C6 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AD9CEB192FA54B2600EA20C6 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = AD9CEB202FA54B2600EA20C6;
+			remoteInfo = Snatch;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		AD1A06B72FA54C6900E3D2EB /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		AD1A06B82FA54C6900E3D2EB /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		AD1A06B92FA54C6900E3D2EB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		AD1A06BA2FA54C6900E3D2EB /* Snatch.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Snatch.entitlements; sourceTree = "<group>"; };
+		AD1A06BB2FA54C6900E3D2EB /* SnatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnatchApp.swift; sourceTree = "<group>"; };
+		AD9CEB212FA54B2600EA20C6 /* Snatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Snatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AD9CEB312FA54B2800EA20C6 /* SnatchTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SnatchTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		AD9CEB3B2FA54B2800EA20C6 /* SnatchUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SnatchUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		AD9CEB1E2FA54B2600EA20C6 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AD1A06C32FA54F1500E3D2EB /* SnatchAppKit in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AD9CEB2E2FA54B2800EA20C6 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AD9CEB382FA54B2800EA20C6 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		AD1A06B32FA54C6900E3D2EB /* Menubar */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Menubar;
+			sourceTree = "<group>";
+		};
+		AD1A06B42FA54C6900E3D2EB /* Permission */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Permission;
+			sourceTree = "<group>";
+		};
+		AD1A06B52FA54C6900E3D2EB /* System */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = System;
+			sourceTree = "<group>";
+		};
+		AD1A06B62FA54C6900E3D2EB /* UI */ = {
+			isa = PBXGroup;
+			children = (
+				AD1A06B32FA54C6900E3D2EB /* Menubar */,
+				AD1A06B42FA54C6900E3D2EB /* Permission */,
+				AD1A06B52FA54C6900E3D2EB /* System */,
+			);
+			path = UI;
+			sourceTree = "<group>";
+		};
+		AD1A06BC2FA54C6900E3D2EB /* App */ = {
+			isa = PBXGroup;
+			children = (
+				AD1A06B62FA54C6900E3D2EB /* UI */,
+				AD1A06B72FA54C6900E3D2EB /* AppDelegate.swift */,
+				AD1A06B82FA54C6900E3D2EB /* Assets.xcassets */,
+				AD1A06B92FA54C6900E3D2EB /* Info.plist */,
+				AD1A06BA2FA54C6900E3D2EB /* Snatch.entitlements */,
+				AD1A06BB2FA54C6900E3D2EB /* SnatchApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		AD9CEB182FA54B2600EA20C6 = {
+			isa = PBXGroup;
+			children = (
+				AD9CEB222FA54B2600EA20C6 /* Products */,
+				AD1A06BC2FA54C6900E3D2EB /* App */,
+			);
+			sourceTree = "<group>";
+		};
+		AD9CEB222FA54B2600EA20C6 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				AD9CEB212FA54B2600EA20C6 /* Snatch.app */,
+				AD9CEB312FA54B2800EA20C6 /* SnatchTests.xctest */,
+				AD9CEB3B2FA54B2800EA20C6 /* SnatchUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		AD9CEB202FA54B2600EA20C6 /* Snatch */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AD9CEB452FA54B2800EA20C6 /* Build configuration list for PBXNativeTarget "Snatch" */;
+			buildPhases = (
+				AD9CEB1D2FA54B2600EA20C6 /* Sources */,
+				AD9CEB1E2FA54B2600EA20C6 /* Frameworks */,
+				AD9CEB1F2FA54B2600EA20C6 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Snatch;
+			packageProductDependencies = (
+				AD1A06C22FA54F1500E3D2EB /* SnatchAppKit */,
+			);
+			productName = Snatch;
+			productReference = AD9CEB212FA54B2600EA20C6 /* Snatch.app */;
+			productType = "com.apple.product-type.application";
+		};
+		AD9CEB302FA54B2800EA20C6 /* SnatchTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AD9CEB482FA54B2800EA20C6 /* Build configuration list for PBXNativeTarget "SnatchTests" */;
+			buildPhases = (
+				AD9CEB2D2FA54B2800EA20C6 /* Sources */,
+				AD9CEB2E2FA54B2800EA20C6 /* Frameworks */,
+				AD9CEB2F2FA54B2800EA20C6 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				AD9CEB332FA54B2800EA20C6 /* PBXTargetDependency */,
+			);
+			name = SnatchTests;
+			packageProductDependencies = (
+			);
+			productName = SnatchTests;
+			productReference = AD9CEB312FA54B2800EA20C6 /* SnatchTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		AD9CEB3A2FA54B2800EA20C6 /* SnatchUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AD9CEB4B2FA54B2800EA20C6 /* Build configuration list for PBXNativeTarget "SnatchUITests" */;
+			buildPhases = (
+				AD9CEB372FA54B2800EA20C6 /* Sources */,
+				AD9CEB382FA54B2800EA20C6 /* Frameworks */,
+				AD9CEB392FA54B2800EA20C6 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				AD9CEB3D2FA54B2800EA20C6 /* PBXTargetDependency */,
+			);
+			name = SnatchUITests;
+			packageProductDependencies = (
+			);
+			productName = SnatchUITests;
+			productReference = AD9CEB3B2FA54B2800EA20C6 /* SnatchUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		AD9CEB192FA54B2600EA20C6 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2640;
+				LastUpgradeCheck = 2640;
+				TargetAttributes = {
+					AD9CEB202FA54B2600EA20C6 = {
+						CreatedOnToolsVersion = 26.4.1;
+					};
+					AD9CEB302FA54B2800EA20C6 = {
+						CreatedOnToolsVersion = 26.4.1;
+						TestTargetID = AD9CEB202FA54B2600EA20C6;
+					};
+					AD9CEB3A2FA54B2800EA20C6 = {
+						CreatedOnToolsVersion = 26.4.1;
+						TestTargetID = AD9CEB202FA54B2600EA20C6;
+					};
+				};
+			};
+			buildConfigurationList = AD9CEB1C2FA54B2600EA20C6 /* Build configuration list for PBXProject "Snatch" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = AD9CEB182FA54B2600EA20C6;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				AD1A06C12FA54F1500E3D2EB /* XCLocalSwiftPackageReference "../snatch" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = AD9CEB222FA54B2600EA20C6 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				AD9CEB202FA54B2600EA20C6 /* Snatch */,
+				AD9CEB302FA54B2800EA20C6 /* SnatchTests */,
+				AD9CEB3A2FA54B2800EA20C6 /* SnatchUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		AD9CEB1F2FA54B2600EA20C6 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AD1A06BF2FA54C6900E3D2EB /* Assets.xcassets in Resources */,
+				AD1A06C02FA54C6900E3D2EB /* Info.plist in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AD9CEB2F2FA54B2800EA20C6 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AD9CEB392FA54B2800EA20C6 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		AD9CEB1D2FA54B2600EA20C6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AD1A06BD2FA54C6900E3D2EB /* AppDelegate.swift in Sources */,
+				AD1A06BE2FA54C6900E3D2EB /* SnatchApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AD9CEB2D2FA54B2800EA20C6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AD9CEB372FA54B2800EA20C6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		AD9CEB332FA54B2800EA20C6 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = AD9CEB202FA54B2600EA20C6 /* Snatch */;
+			targetProxy = AD9CEB322FA54B2800EA20C6 /* PBXContainerItemProxy */;
+		};
+		AD9CEB3D2FA54B2800EA20C6 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = AD9CEB202FA54B2600EA20C6 /* Snatch */;
+			targetProxy = AD9CEB3C2FA54B2800EA20C6 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		AD9CEB432FA54B2800EA20C6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 8E765EZVAM;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.4;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		AD9CEB442FA54B2800EA20C6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 8E765EZVAM;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.4;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		AD9CEB462FA54B2800EA20C6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = App/Snatch.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8E765EZVAM;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = App/Info.plist;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSMainStoryboardFile = Main;
+				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = co.snatch.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		AD9CEB472FA54B2800EA20C6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = App/Snatch.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8E765EZVAM;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = App/Info.plist;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSMainStoryboardFile = Main;
+				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = co.snatch.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		AD9CEB492FA54B2800EA20C6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8E765EZVAM;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.4;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = co.snatch.SnatchTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Snatch.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Snatch";
+			};
+			name = Debug;
+		};
+		AD9CEB4A2FA54B2800EA20C6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8E765EZVAM;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.4;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = co.snatch.SnatchTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Snatch.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Snatch";
+			};
+			name = Release;
+		};
+		AD9CEB4C2FA54B2800EA20C6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8E765EZVAM;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = co.snatch.SnatchUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = Snatch;
+			};
+			name = Debug;
+		};
+		AD9CEB4D2FA54B2800EA20C6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8E765EZVAM;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = co.snatch.SnatchUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = Snatch;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		AD9CEB1C2FA54B2600EA20C6 /* Build configuration list for PBXProject "Snatch" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AD9CEB432FA54B2800EA20C6 /* Debug */,
+				AD9CEB442FA54B2800EA20C6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AD9CEB452FA54B2800EA20C6 /* Build configuration list for PBXNativeTarget "Snatch" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AD9CEB462FA54B2800EA20C6 /* Debug */,
+				AD9CEB472FA54B2800EA20C6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AD9CEB482FA54B2800EA20C6 /* Build configuration list for PBXNativeTarget "SnatchTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AD9CEB492FA54B2800EA20C6 /* Debug */,
+				AD9CEB4A2FA54B2800EA20C6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AD9CEB4B2FA54B2800EA20C6 /* Build configuration list for PBXNativeTarget "SnatchUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AD9CEB4C2FA54B2800EA20C6 /* Debug */,
+				AD9CEB4D2FA54B2800EA20C6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		AD1A06C12FA54F1500E3D2EB /* XCLocalSwiftPackageReference "../snatch" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../snatch;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		AD1A06C22FA54F1500E3D2EB /* SnatchAppKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = SnatchAppKit;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = AD9CEB192FA54B2600EA20C6 /* Project object */;
+}
