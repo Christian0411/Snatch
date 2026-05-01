@@ -34,10 +34,6 @@ public final class GifskiEncoder {
     private var nextFrameIndex: UInt32 = 0
     private var finished = false
 
-    // Cancellation flag accessed from the progress callback. Stored on heap so
-    // the C callback closure (via a raw pointer) can read it safely.
-    private var cancelled = false
-
     public init(outputURL: URL, fps: Int = 30, quality: Int = 90) throws {
         self.outputURL = outputURL
         self.partialURL = URL(fileURLWithPath: outputURL.path + ".partial")
@@ -47,7 +43,7 @@ public final class GifskiEncoder {
         settings.height = 0
         settings.quality = UInt8(min(max(quality, 1), 100))
         settings.fast = false
-        settings.repeat = -1  // -1 = looping disabled; 0 = infinite loop
+        settings.repeat = 0  // 0 = infinite loop (Netscape Loop extension); >0 = N repetitions; <0 = no loop
 
         guard let g = gifski_new(&settings) else {
             throw GifskiEncoderError.gifskiNewFailed
@@ -127,9 +123,12 @@ public final class GifskiEncoder {
         // vendored version, which lacks gifski_drop) also deletes the output
         // file when called with no frames — which would remove the .partial
         // file unexpectedly. Callers MUST explicitly call cancel() or finish()
-        // to clean up. An abandoned encoder (e.g. ARC release without explicit
-        // cleanup) leaves the .partial file on disk as a sentinel, which is
-        // swept on the next encode cycle. The Rust runtime reclaims the gifski
-        // heap allocation when the process exits.
+        // to clean up.
+        //
+        // CONSEQUENCE: dropping a GifskiEncoder without finish/cancel
+        // orphans gifski's worker threads (crossbeam channels + rayon pool)
+        // until process exit. Acceptable for the M1 CLI use-case (short-lived
+        // process). Revisit in M4 (Coordinator) where multiple encode sessions
+        // run sequentially in the same process.
     }
 }
