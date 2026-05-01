@@ -32,6 +32,25 @@ extension GifskiEncoderError: LocalizedError {
 /// immediately. For cancel after partial frame submission, a progress callback
 /// returning 0 triggers abort before `gifski_finish` returns.
 public final class GifskiEncoder {
+    // MARK: - Threading
+    //
+    // GifskiEncoder is NOT internally synchronized. `addFrame`, `finish`, and
+    // `cancel` all mutate `gifskiPtr` and the underlying gifski state, and
+    // MUST be invoked from a single serial queue (the "encoder queue").
+    //
+    // Per spec §5, the canonical layout is:
+    //   - `encoderQueue`: serial DispatchQueue, QoS .userInitiated, owned by
+    //     the orchestrator (M2's snatch-record-cli, M4's RecordingSession).
+    //   - `addFrame` is called synchronously from this queue.
+    //   - `finish` is async-but-blocking (`gifski_finish` blocks until all
+    //     queued frames drain). Schedule it via `Task.detached` or dispatch
+    //     to `encoderQueue` — never call from the main actor.
+    //   - `cancel` may briefly block while `gifski_finish` drains in-flight
+    //     frames, so it too must run off the main thread.
+    //
+    // Violating this contract corrupts the encoder state and can crash inside
+    // gifski's Rust side via aliased `&mut` pointers.
+
     public let outputURL: URL
     private let partialURL: URL
     private var gifskiPtr: OpaquePointer?
