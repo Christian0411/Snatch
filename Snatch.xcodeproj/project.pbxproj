@@ -15,6 +15,7 @@
 		AD1A06C92FA551A100E3D2EB /* PasteboardWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD1A06C82FA551A100E3D2EB /* PasteboardWriter.swift */; };
 		AD1A06CA2FA551A100E3D2EB /* HotkeyRegistrar.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD1A06C62FA551A100E3D2EB /* HotkeyRegistrar.swift */; };
 		AD1A06CB2FA551A100E3D2EB /* NotificationPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD1A06C72FA551A100E3D2EB /* NotificationPresenter.swift */; };
+		AD1A06CD2FA5547A00E3D2EB /* MenubarIconImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD1A06CC2FA5547A00E3D2EB /* MenubarIconImage.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -44,6 +45,7 @@
 		AD1A06C62FA551A100E3D2EB /* HotkeyRegistrar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotkeyRegistrar.swift; sourceTree = "<group>"; };
 		AD1A06C72FA551A100E3D2EB /* NotificationPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationPresenter.swift; sourceTree = "<group>"; };
 		AD1A06C82FA551A100E3D2EB /* PasteboardWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasteboardWriter.swift; sourceTree = "<group>"; };
+		AD1A06CC2FA5547A00E3D2EB /* MenubarIconImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenubarIconImage.swift; sourceTree = "<group>"; };
 		AD9CEB212FA54B2600EA20C6 /* Snatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Snatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AD9CEB312FA54B2800EA20C6 /* SnatchTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SnatchTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		AD9CEB3B2FA54B2800EA20C6 /* SnatchUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SnatchUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -78,6 +80,7 @@
 		AD1A06B32FA54C6900E3D2EB /* Menubar */ = {
 			isa = PBXGroup;
 			children = (
+				AD1A06CC2FA5547A00E3D2EB /* MenubarIconImage.swift */,
 			);
 			path = Menubar;
 			sourceTree = "<group>";
@@ -287,6 +290,7 @@
 				AD1A06C92FA551A100E3D2EB /* PasteboardWriter.swift in Sources */,
 				AD1A06CA2FA551A100E3D2EB /* HotkeyRegistrar.swift in Sources */,
 				AD1A06CB2FA551A100E3D2EB /* NotificationPresenter.swift in Sources */,
+				AD1A06CD2FA5547A00E3D2EB /* MenubarIconImage.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
