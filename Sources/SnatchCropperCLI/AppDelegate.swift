@@ -15,7 +15,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
-        let w = CropperWindow(screen: screen)
+        let initialViewLocal = regionStore.lastRegion.map { region -> CGRect in
+            CGRect(
+                x: region.origin.x - screen.frame.origin.x,
+                y: region.origin.y - screen.frame.origin.y,
+                width: region.size.width,
+                height: region.size.height
+            )
+        }
+        let w = CropperWindow(screen: screen, initialRegion: initialViewLocal)
         self.cropperWindow = w
         w.makeKeyAndOrderFront(nil)
         // Mouse / keyboard handlers are wired up in Tasks 11–13.

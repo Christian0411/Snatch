@@ -9,9 +9,16 @@ import AppKit
 /// reach the view's responder chain.
 final class CropperWindow: NSWindow {
 
-    init(screen: NSScreen) {
+    let cropperView: CropperView
+
+    init(screen: NSScreen, initialRegion: CGRect?) {
+        let frame = screen.frame
+        self.cropperView = CropperView(frame: NSRect(origin: .zero, size: frame.size), initialRegion: initialRegion)
+
+        // 4-arg designated initializer; see Task 9 note on why the
+        // 5-arg `…:screen:` convenience form can't be called here.
         super.init(
-            contentRect: screen.frame,
+            contentRect: frame,
             styleMask: [.borderless],
             backing: .buffered,
             defer: false
@@ -24,6 +31,8 @@ final class CropperWindow: NSWindow {
         self.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         self.ignoresMouseEvents = false
         self.acceptsMouseMovedEvents = true
+
+        self.contentView = cropperView
     }
 
     override var canBecomeKey: Bool { true }
