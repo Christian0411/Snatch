@@ -59,21 +59,29 @@ final class PipelineIntegrationTests: XCTestCase {
         // Verify the encoder still produces a 60-frame GIF (the most recent
         // 60), and droppedCount == 10.
         //
-        // We cycle through 7 distinct colors so gifski does not collapse
-        // identical adjacent frames into one.
+        // gifski deduplicates consecutive frames with identical pixel content
+        // into a single output frame, so a naive loop of 70 identical gray
+        // frames would produce a 1-frame GIF and make the
+        // `frameCount == 60` assertion meaningless. Cycling through 7
+        // distinct colors guarantees no two adjacent frames are identical
+        // (cycle length 7 is coprime to 60), preserving a 1:1
+        // correspondence between encoded and output frames.
         let outURL = tempDir.appendingPathComponent("overflow.gif")
         let converter = FrameConverter()
         let bridge = BridgeQueue<(RGBAFrame, TimeInterval)>(capacity: 60)
         let encoder = try GifskiEncoder(outputURL: outURL, quality: 90)
 
-        // 7 distinct BGRA colors so no two consecutive frames are identical.
+        // Tuples are stored in BGRA byte order (B, G, R, A) — the format
+        // ScreenCaptureKit emits and `FrameConverter` consumes. The label on
+        // each line names the *output* RGB color a reader would see in the
+        // produced GIF (i.e., after FrameConverter's BGRA→RGBA byte swap).
         let bgraColors: [(UInt8, UInt8, UInt8, UInt8)] = [
-            (255, 0,   0,   0xFF),  // red
-            (0,   255, 0,   0xFF),  // green
-            (0,   0,   255, 0xFF),  // blue
-            (255, 255, 0,   0xFF),  // yellow
+            (0,   0,   255, 0xFF),  // red    (R=255)
+            (0,   255, 0,   0xFF),  // green  (G=255)
+            (255, 0,   0,   0xFF),  // blue   (B=255)
+            (0,   255, 255, 0xFF),  // yellow (R=255, G=255)
             (255, 0,   255, 0xFF),  // magenta
-            (0,   255, 255, 0xFF),  // cyan
+            (255, 255, 0,   0xFF),  // cyan   (G=255, B=255)
             (128, 128, 128, 0xFF),  // gray
         ]
 
