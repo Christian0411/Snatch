@@ -70,6 +70,7 @@ final class MenubarController: NSObject {
 
     private func buildMenu() -> NSMenu {
         let menu = NSMenu()
+        menu.autoenablesItems = false
         menu.delegate = self
 
         let start = NSMenuItem(title: "Start Recording", action: #selector(startRecordingAction), keyEquivalent: "6")
