@@ -10,6 +10,41 @@ public final class CropperView: NSView {
     /// Click-target diameter of each resize handle, in points.
     public static let handleSize: CGFloat = 12
 
+    /// When `true`, `mouseUp` that commits a fresh `.have(rect)` will fire
+    /// `onRecord(rect)` directly — same callback path as the Record button /
+    /// Space / Return. Set by `MenubarCoordinator.showCropper()` based on
+    /// `RememberRegionPreferenceStore` + `AutoStartRecordingPreferenceStore`.
+    public var autoStartOnCommit: Bool = false
+
+    /// Most recent mouse position in view-local (flipped, top-left origin)
+    /// coordinates. Tracked via a full-view `NSTrackingArea`; cleared on
+    /// `mouseExited` so the readout disappears when the cursor leaves the
+    /// cropper (e.g. crosses to another display).
+    private var mouseLocation: CGPoint?
+
+    /// Programmatic 16×16 crosshair cursor, drawn as two 1pt white lines
+    /// centered at (8, 8). Shared across all cropper instances; lazily built
+    /// once.
+    private static let crosshairCursor: NSCursor = {
+        let size = NSSize(width: 16, height: 16)
+        let img = NSImage(size: size, flipped: false) { _ in
+            NSColor.white.setStroke()
+            let p = NSBezierPath()
+            p.move(to: NSPoint(x: 8, y: 0))
+            p.line(to: NSPoint(x: 8, y: 16))
+            p.move(to: NSPoint(x: 0, y: 8))
+            p.line(to: NSPoint(x: 16, y: 8))
+            p.lineWidth = 1
+            p.stroke()
+            return true
+        }
+        return NSCursor(image: img, hotSpot: NSPoint(x: 8, y: 8))
+    }()
+
+    /// One full-view tracking area, rebuilt on every `updateTrackingAreas`
+    /// (covers cropper window resize when the user moves across displays).
+    private var trackingArea: NSTrackingArea?
+
     /// Called when the user confirms the region (Record button, Space, or Return).
     public var onRecord: ((CGRect) -> Void)?
 
@@ -47,6 +82,21 @@ public final class CropperView: NSView {
     }
 
     public required init?(coder: NSCoder) { fatalError("not implemented") }
+
+    public override func updateTrackingAreas() {
+        super.updateTrackingAreas()
+        if let existing = trackingArea {
+            removeTrackingArea(existing)
+        }
+        let area = NSTrackingArea(
+            rect: bounds,
+            options: [.mouseMoved, .mouseEnteredAndExited, .activeAlways, .cursorUpdate, .inVisibleRect],
+            owner: self,
+            userInfo: nil
+        )
+        addTrackingArea(area)
+        trackingArea = area
+    }
 
     /// Use a flipped coordinate system so y-down matches CG / spec §6 region
     /// semantics. Without this, the math in CropperGeometry would need a
@@ -108,6 +158,65 @@ public final class CropperView: NSView {
             y: max(0, rect.minY - size.height - 2)
         )
         (label as NSString).draw(at: labelOrigin, withAttributes: attrs)
+
+        // 5. Crosshair x/y readout (pre-M6 tweaks Item 1). Shown alongside the
+        //    custom NSCursor when `shouldShowCrosshair` is true. Numbers are
+        //    in CG screen-space (top-left global origin) — matches what the
+        //    macOS native screenshot tool shows. Multi-display correctness
+        //    relies on the cropper window's frame.origin matching the chosen
+        //    screen's frame.origin (M5 single-screen-under-cursor behavior).
+        if let cursor = mouseLocation,
+           state.shouldShowCrosshair(cursor: cursor, handleSize: Self.handleSize),
+           let window = window,
+           let mainScreen = NSScreen.main {
+
+            // View-local (flipped, top-left) → CG screen-space (top-left global).
+            let mainHeight = mainScreen.frame.height
+            let cgY_screenTop = mainHeight - (window.frame.origin.y + window.frame.height)
+            let cgX = Int((window.frame.origin.x + cursor.x).rounded())
+            let cgY = Int((cgY_screenTop + cursor.y).rounded())
+
+            let xStr = "\(cgX)"
+            let yStr = "\(cgY)"
+
+            let textAttrs: [NSAttributedString.Key: Any] = [
+                .font: NSFont.systemFont(ofSize: 12, weight: .medium),
+                .foregroundColor: NSColor.white,
+            ]
+
+            let xSize = (xStr as NSString).size(withAttributes: textAttrs)
+            let ySize = (yStr as NSString).size(withAttributes: textAttrs)
+            let textW = max(xSize.width, ySize.width)
+            let textH = xSize.height + ySize.height
+            let pad: CGFloat = 4
+            let pillW = textW + pad * 2
+            let pillH = textH + pad * 2
+
+            // Default placement: bottom-right of cursor, 12pt offset.
+            var pillX = cursor.x + 12
+            var pillY = cursor.y + 12
+            // Edge-flip: keep the pill inside the view bounds.
+            if pillX + pillW > bounds.width {
+                pillX = cursor.x - 12 - pillW
+            }
+            if pillY + pillH > bounds.height {
+                pillY = cursor.y - 12 - pillH
+            }
+
+            let pillRect = CGRect(x: pillX, y: pillY, width: pillW, height: pillH)
+            NSColor.black.withAlphaComponent(0.7).setFill()
+            NSBezierPath(roundedRect: pillRect, xRadius: 6, yRadius: 6).fill()
+
+            // Numbers stacked, left-aligned inside the pill.
+            (xStr as NSString).draw(
+                at: CGPoint(x: pillX + pad, y: pillY + pad),
+                withAttributes: textAttrs
+            )
+            (yStr as NSString).draw(
+                at: CGPoint(x: pillX + pad, y: pillY + pad + xSize.height),
+                withAttributes: textAttrs
+            )
+        }
     }
 
     // MARK: - Mouse handling
@@ -125,6 +234,27 @@ public final class CropperView: NSView {
     public override func mouseUp(with event: NSEvent) {
         let p = convert(event.locationInWindow, from: nil)
         state = state.applyMouseUp(at: p)
+        if autoStartOnCommit, case .have(let rect) = state.mode {
+            onRecord?(rect)
+        }
+    }
+
+    public override func mouseMoved(with event: NSEvent) {
+        mouseLocation = convert(event.locationInWindow, from: nil)
+        needsDisplay = true
+    }
+
+    public override func mouseExited(with event: NSEvent) {
+        mouseLocation = nil
+        needsDisplay = true
+    }
+
+    public override func cursorUpdate(with event: NSEvent) {
+        if state.shouldShowCrosshair(cursor: mouseLocation, handleSize: Self.handleSize) {
+            Self.crosshairCursor.set()
+        } else {
+            NSCursor.arrow.set()
+        }
     }
 
     private var shouldShowHandles: Bool {
