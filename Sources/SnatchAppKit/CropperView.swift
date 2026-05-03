@@ -271,9 +271,14 @@ public final class CropperView: NSView {
     public override func mouseUp(with event: NSEvent) {
         let p = convert(event.locationInWindow, from: nil)
         mouseLocation = p
+        // Capture before applyMouseUp transitions us into .have. Auto-fire
+        // should only happen on a fresh-drag commit, not on resize-end —
+        // both paths land in .have(rect), but only .dragging → .have means
+        // "the user just defined a new region."
+        let wasDragging: Bool = if case .dragging = state.mode { true } else { false }
         state = state.applyMouseUp(at: p)
         updateCursor()
-        if autoStartOnCommit, case .have(let rect) = state.mode {
+        if autoStartOnCommit, wasDragging, case .have(let rect) = state.mode {
             onRecord?(rect)
         }
     }
