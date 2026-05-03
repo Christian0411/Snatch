@@ -199,6 +199,7 @@ public final class CropperView: NSView {
         //    NOTE: this runs in every mode (.idle / .dragging / .resizing /
         //    .have) — the predicate gates which modes actually render.
         if let cursor = mouseLocation,
+           !cursorIsOverRecordButton,
            state.shouldShowCrosshair(cursor: cursor, handleSize: Self.handleSize),
            let window = window,
            let mainScreen = NSScreen.main {
@@ -304,11 +305,24 @@ public final class CropperView: NSView {
     /// on every `mouseMoved`, so we drive the swap manually as the cursor
     /// traverses the static tracking area.
     private func updateCursor() {
+        if cursorIsOverRecordButton {
+            NSCursor.arrow.set()
+            return
+        }
         if state.shouldShowCrosshair(cursor: mouseLocation, handleSize: Self.handleSize) {
             Self.crosshairCursor.set()
         } else {
             NSCursor.arrow.set()
         }
+    }
+
+    /// True when the Record button is visible and the current `mouseLocation`
+    /// is inside its frame. Used to suppress the crosshair cursor + x/y pill
+    /// over the button — the predicate alone would say "outside rect → show
+    /// crosshair," which is wrong when the user is reaching for Record.
+    private var cursorIsOverRecordButton: Bool {
+        guard !recordButton.isHidden, let cursor = mouseLocation else { return false }
+        return recordButton.frame.contains(cursor)
     }
 
     private var shouldShowHandles: Bool {
