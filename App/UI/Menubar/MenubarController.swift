@@ -108,7 +108,12 @@ final class MenubarController: NSObject {
             keyEquivalent: ""
         )
         autoStart.target = self
-        autoStart.state = autoStartStore.isEnabled ? .on : .off
+        // Checkmark reflects the *effective* state: the preference is persisted
+        // independently, but the runtime gate disables auto-fire whenever Remember
+        // is ON. Showing a checkmark while disabled would mislead the user into
+        // thinking Auto-Start will fire — it won't.
+        let autoStartEffectivelyOn = autoStartStore.isEnabled && !rememberRegionStore.isEnabled
+        autoStart.state = autoStartEffectivelyOn ? .on : .off
         autoStart.isEnabled = !rememberRegionStore.isEnabled
         menu.addItem(autoStart)
 
