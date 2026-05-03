@@ -142,48 +142,52 @@ public final class CropperView: NSView {
             bounds.fill()
         }
 
-        guard let rect = state.displayRect else { return }
+        // Steps 2–4 only apply when there is a rect to draw. Step 5 (the
+        // crosshair x/y readout) is independent and applies in .idle and
+        // .dragging too — it's drawn after this block.
+        if let rect = state.displayRect {
 
-        // 2. Rectangle outline (dashed — matches macOS native screenshot tool).
-        NSColor.white.setStroke()
-        let outline = NSBezierPath(rect: rect)
-        outline.lineWidth = 1
-        outline.setLineDash([6, 4], count: 2, phase: 0)
-        outline.stroke()
+            // 2. Rectangle outline (dashed — matches macOS native screenshot tool).
+            NSColor.white.setStroke()
+            let outline = NSBezierPath(rect: rect)
+            outline.lineWidth = 1
+            outline.setLineDash([6, 4], count: 2, phase: 0)
+            outline.stroke()
 
-        // 3. Resize handles (only when committed or while resizing — not
-        //    during a fresh drag). Drawn as small white circles with a thin
-        //    grey rim — matches macOS native screenshot tool. Click target
-        //    stays at `Self.handleSize` (12pt); the visible oval is inset
-        //    by 2pt on each side, giving an 8pt circle centered in the
-        //    12pt hit zone.
-        if shouldShowHandles {
-            for (_, frame) in CropperGeometry.handleFrames(for: rect, handleSize: Self.handleSize) {
-                let visible = frame.insetBy(dx: 2, dy: 2)
-                let oval = NSBezierPath(ovalIn: visible)
-                NSColor.white.setFill()
-                oval.fill()
-                NSColor.systemGray.setStroke()
-                oval.lineWidth = 1
-                oval.stroke()
+            // 3. Resize handles (only when committed or while resizing — not
+            //    during a fresh drag). Drawn as small white circles with a thin
+            //    grey rim — matches macOS native screenshot tool. Click target
+            //    stays at `Self.handleSize` (12pt); the visible oval is inset
+            //    by 2pt on each side, giving an 8pt circle centered in the
+            //    12pt hit zone.
+            if shouldShowHandles {
+                for (_, frame) in CropperGeometry.handleFrames(for: rect, handleSize: Self.handleSize) {
+                    let visible = frame.insetBy(dx: 2, dy: 2)
+                    let oval = NSBezierPath(ovalIn: visible)
+                    NSColor.white.setFill()
+                    oval.fill()
+                    NSColor.systemGray.setStroke()
+                    oval.lineWidth = 1
+                    oval.stroke()
+                }
             }
-        }
 
-        // 4. Dimensions label, rendered just outside the rect's top-left.
-        let w = Int(rect.width.rounded())
-        let h = Int(rect.height.rounded())
-        let label = "\(w) × \(h)"
-        let attrs: [NSAttributedString.Key: Any] = [
-            .font: NSFont.systemFont(ofSize: 12, weight: .medium),
-            .foregroundColor: NSColor.white,
-            .backgroundColor: NSColor.black.withAlphaComponent(0.6),
-        ]
-        let size = (label as NSString).size(withAttributes: attrs)
-        let labelOrigin = CGPoint(
-            x: rect.minX,
-            y: max(0, rect.minY - size.height - 2)
-        )
-        (label as NSString).draw(at: labelOrigin, withAttributes: attrs)
+            // 4. Dimensions label, rendered just outside the rect's top-left.
+            let w = Int(rect.width.rounded())
+            let h = Int(rect.height.rounded())
+            let label = "\(w) × \(h)"
+            let attrs: [NSAttributedString.Key: Any] = [
+                .font: NSFont.systemFont(ofSize: 12, weight: .medium),
+                .foregroundColor: NSColor.white,
+                .backgroundColor: NSColor.black.withAlphaComponent(0.6),
+            ]
+            let size = (label as NSString).size(withAttributes: attrs)
+            let labelOrigin = CGPoint(
+                x: rect.minX,
+                y: max(0, rect.minY - size.height - 2)
+            )
+            (label as NSString).draw(at: labelOrigin, withAttributes: attrs)
+        }
 
         // 5. Crosshair x/y readout (pre-M6 tweaks Item 1). Shown alongside the
         //    custom NSCursor when `shouldShowCrosshair` is true. Numbers are
@@ -191,6 +195,8 @@ public final class CropperView: NSView {
         //    macOS native screenshot tool shows. Multi-display correctness
         //    relies on the cropper window's frame.origin matching the chosen
         //    screen's frame.origin (M5 single-screen-under-cursor behavior).
+        //    NOTE: this runs in every mode (.idle / .dragging / .resizing /
+        //    .have) — the predicate gates which modes actually render.
         if let cursor = mouseLocation,
            state.shouldShowCrosshair(cursor: cursor, handleSize: Self.handleSize),
            let window = window,
