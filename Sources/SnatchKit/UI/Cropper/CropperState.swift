@@ -53,6 +53,31 @@ public struct CropperState: Equatable, Sendable {
         return nil
     }
 
+    // MARK: - Crosshair visibility
+
+    /// Should the cropper show a crosshair cursor + coordinate readout right
+    /// now? The predicate captures "a click would start a fresh drag, OR the
+    /// user is currently drawing one." See pre-M6 tweaks spec, Item 1.
+    ///
+    /// - `cursor` is in view-local coordinates (top-left origin, since the
+    ///   cropper view is flipped). Pass `nil` to indicate "the cursor is
+    ///   outside the cropper view" (e.g. the user moved to another display).
+    /// - `handleSize` is the same `CGFloat` constant the view uses for hit
+    ///   testing (currently `CropperView.handleSize = 12`).
+    public func shouldShowCrosshair(cursor: CGPoint?, handleSize: CGFloat) -> Bool {
+        guard let cursor else { return false }
+        switch mode {
+        case .idle:      return true
+        case .dragging:  return true
+        case .resizing:  return false
+        case .have(let r):
+            if CropperGeometry.hitTest(point: cursor, in: r, handleSize: handleSize) != nil {
+                return false
+            }
+            return !r.contains(cursor)
+        }
+    }
+
     // MARK: - Transitions
 
     public func applyMouseDown(at point: CGPoint, handleSize: CGFloat) -> CropperState {
