@@ -121,6 +121,7 @@ public final class CropperView: NSView {
         if bounds.contains(viewPoint) {
             mouseLocation = viewPoint
             needsDisplay = true
+            updateCursor()
         }
     }
 
@@ -257,18 +258,21 @@ public final class CropperView: NSView {
         let p = convert(event.locationInWindow, from: nil)
         mouseLocation = p
         state = state.applyMouseDown(at: p, handleSize: Self.handleSize)
+        updateCursor()
     }
 
     public override func mouseDragged(with event: NSEvent) {
         let p = convert(event.locationInWindow, from: nil)
         mouseLocation = p
         state = state.applyMouseDragged(at: p)
+        updateCursor()
     }
 
     public override func mouseUp(with event: NSEvent) {
         let p = convert(event.locationInWindow, from: nil)
         mouseLocation = p
         state = state.applyMouseUp(at: p)
+        updateCursor()
         if autoStartOnCommit, case .have(let rect) = state.mode {
             onRecord?(rect)
         }
@@ -277,6 +281,7 @@ public final class CropperView: NSView {
     public override func mouseMoved(with event: NSEvent) {
         mouseLocation = convert(event.locationInWindow, from: nil)
         needsDisplay = true
+        updateCursor()
     }
 
     public override func mouseExited(with event: NSEvent) {
@@ -285,6 +290,15 @@ public final class CropperView: NSView {
     }
 
     public override func cursorUpdate(with event: NSEvent) {
+        updateCursor()
+    }
+
+    /// Swap the system cursor based on the current state + `mouseLocation`.
+    /// Called from `cursorUpdate(with:)` AND from every mouse-event override
+    /// that updates `mouseLocation` — AppKit does not invoke `cursorUpdate`
+    /// on every `mouseMoved`, so we drive the swap manually as the cursor
+    /// traverses the static tracking area.
+    private func updateCursor() {
         if state.shouldShowCrosshair(cursor: mouseLocation, handleSize: Self.handleSize) {
             Self.crosshairCursor.set()
         } else {
