@@ -16,6 +16,7 @@ final class MenubarCoordinator {
     let regionStore: RegionStore
     let scaleStore: ScalePresetStore
     let rememberRegionStore: RememberRegionPreferenceStore
+    let autoStartStore: AutoStartRecordingPreferenceStore
     let recentsStore: RecentRecordingsStore
     let permissions: PermissionsCoordinator
     let permissionAlerts: PermissionAlertPresenter
@@ -34,6 +35,7 @@ final class MenubarCoordinator {
          regionStore: RegionStore,
          scaleStore: ScalePresetStore,
          rememberRegionStore: RememberRegionPreferenceStore,
+         autoStartStore: AutoStartRecordingPreferenceStore,
          recentsStore: RecentRecordingsStore,
          permissions: PermissionsCoordinator,
          pasteboard: PasteboardWriter,
@@ -46,6 +48,7 @@ final class MenubarCoordinator {
         self.regionStore = regionStore
         self.scaleStore = scaleStore
         self.rememberRegionStore = rememberRegionStore
+        self.autoStartStore = autoStartStore
         self.recentsStore = recentsStore
         self.permissions = permissions
         self.permissionAlerts = PermissionAlertPresenter()
@@ -153,6 +156,9 @@ final class MenubarCoordinator {
         } else {
             cropperWindow.cropperView.state = CropperState(initial: nil)
         }
+
+        cropperWindow.cropperView.autoStartOnCommit =
+            !rememberRegionStore.isEnabled && autoStartStore.isEnabled
 
         cropperWindow.orderFrontRegardless()
         NSApp.activate(ignoringOtherApps: true)

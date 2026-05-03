@@ -8,6 +8,7 @@ final class MenubarController: NSObject {
     private let session: RecordingSession
     private let scaleStore: ScalePresetStore
     private let rememberRegionStore: RememberRegionPreferenceStore
+    private let autoStartStore: AutoStartRecordingPreferenceStore
     private let recentsStore: RecentRecordingsStore
     private let permissions: PermissionsCoordinator
     private let onStartRecording: () -> Void
@@ -19,6 +20,7 @@ final class MenubarController: NSObject {
     init(session: RecordingSession,
          scaleStore: ScalePresetStore,
          rememberRegionStore: RememberRegionPreferenceStore,
+         autoStartStore: AutoStartRecordingPreferenceStore,
          recentsStore: RecentRecordingsStore,
          permissions: PermissionsCoordinator,
          onStartRecording: @escaping () -> Void,
@@ -26,6 +28,7 @@ final class MenubarController: NSObject {
         self.session = session
         self.scaleStore = scaleStore
         self.rememberRegionStore = rememberRegionStore
+        self.autoStartStore = autoStartStore
         self.recentsStore = recentsStore
         self.permissions = permissions
         self.onStartRecording = onStartRecording
@@ -98,6 +101,16 @@ final class MenubarController: NSObject {
         remember.state = rememberRegionStore.isEnabled ? .on : .off
         menu.addItem(remember)
 
+        let autoStart = NSMenuItem(
+            title: "Auto-Start Recording on Selection",
+            action: #selector(toggleAutoStartAction),
+            keyEquivalent: ""
+        )
+        autoStart.target = self
+        autoStart.state = autoStartStore.isEnabled ? .on : .off
+        autoStart.isEnabled = !rememberRegionStore.isEnabled
+        menu.addItem(autoStart)
+
         // Recent Recordings ▸  (built lazily in menuWillOpen via delegate)
         let recentItem = NSMenuItem(title: "Recent Recordings", action: nil, keyEquivalent: "")
         recentItem.submenu = NSMenu()
@@ -138,6 +151,10 @@ final class MenubarController: NSObject {
 
     @objc private func toggleRememberAction() {
         rememberRegionStore.setEnabled(!rememberRegionStore.isEnabled)
+    }
+
+    @objc private func toggleAutoStartAction() {
+        autoStartStore.setEnabled(!autoStartStore.isEnabled)
     }
 
     @objc private func aboutAction() {

@@ -14,6 +14,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var regionStore: RegionStore!
     private var scaleStore: ScalePresetStore!
     private var rememberRegionStore: RememberRegionPreferenceStore!
+    private var autoStartStore: AutoStartRecordingPreferenceStore!
     private var recentsStore: RecentRecordingsStore!
     private var permissions: PermissionsCoordinator!
     private var pasteboard: PasteboardWriter!
@@ -38,6 +39,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         regionStore      = RegionStore()
         scaleStore       = ScalePresetStore()
         rememberRegionStore = RememberRegionPreferenceStore()
+        autoStartStore   = AutoStartRecordingPreferenceStore()
         recentsStore     = RecentRecordingsStore()
         permissions      = PermissionsCoordinator()
         pasteboard       = PasteboardWriter()
@@ -58,6 +60,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             regionStore: regionStore,
             scaleStore: scaleStore,
             rememberRegionStore: rememberRegionStore,
+            autoStartStore: autoStartStore,
             recentsStore: recentsStore,
             permissions: permissions,
             pasteboard: pasteboard,
@@ -78,6 +81,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             session: session,
             scaleStore: scaleStore,
             rememberRegionStore: rememberRegionStore,
+            autoStartStore: autoStartStore,
             recentsStore: recentsStore,
             permissions: permissions,
             onStartRecording: { [weak coordinator] in
