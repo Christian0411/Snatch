@@ -98,6 +98,32 @@ public final class CropperView: NSView {
         trackingArea = area
     }
 
+    public override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        // AppKit calls updateTrackingAreas() only when geometry changes. If the
+        // view's frame is set at init and never changes (cropper is sized to fill
+        // the screen), we'd never get a tracking area otherwise.
+        if window != nil {
+            updateTrackingAreas()
+        }
+    }
+
+    /// Seed `mouseLocation` from the current global cursor position so the
+    /// crosshair / x-y readout appear before the first `mouseMoved` event.
+    /// Called by `CropperWindow.becomeKey()` when the cropper is shown — at
+    /// that moment the user has just hit ⇧⌘6 and `mouseMoved` won't fire
+    /// until they nudge the cursor.
+    public func warmMouseLocation() {
+        guard let win = window else { return }
+        let screenPoint = NSEvent.mouseLocation
+        let windowPoint = win.convertPoint(fromScreen: screenPoint)
+        let viewPoint = convert(windowPoint, from: nil)
+        if bounds.contains(viewPoint) {
+            mouseLocation = viewPoint
+            needsDisplay = true
+        }
+    }
+
     /// Use a flipped coordinate system so y-down matches CG / spec §6 region
     /// semantics. Without this, the math in CropperGeometry would need a
     /// y-flip every time we crossed the AppKit boundary.
@@ -223,16 +249,19 @@ public final class CropperView: NSView {
 
     public override func mouseDown(with event: NSEvent) {
         let p = convert(event.locationInWindow, from: nil)
+        mouseLocation = p
         state = state.applyMouseDown(at: p, handleSize: Self.handleSize)
     }
 
     public override func mouseDragged(with event: NSEvent) {
         let p = convert(event.locationInWindow, from: nil)
+        mouseLocation = p
         state = state.applyMouseDragged(at: p)
     }
 
     public override func mouseUp(with event: NSEvent) {
         let p = convert(event.locationInWindow, from: nil)
+        mouseLocation = p
         state = state.applyMouseUp(at: p)
         if autoStartOnCommit, case .have(let rect) = state.mode {
             onRecord?(rect)

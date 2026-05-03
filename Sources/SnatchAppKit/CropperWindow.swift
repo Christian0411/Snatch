@@ -43,5 +43,6 @@ public final class CropperWindow: NSWindow {
     public override func becomeKey() {
         super.becomeKey()
         self.makeFirstResponder(cropperView)
+        cropperView.warmMouseLocation()
     }
 }
