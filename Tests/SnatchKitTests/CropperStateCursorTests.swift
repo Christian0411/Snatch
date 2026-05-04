@@ -141,4 +141,51 @@ final class CropperStateCursorTests: XCTestCase {
             .arrow
         )
     }
+
+    // MARK: - mode == .resizing (gesture lock)
+
+    func test_resizing_body_isGrabbing_anywhere() {
+        // Start with a committed rect; mouseDown inside the body drives state into .resizing(.body).
+        let rect = CGRect(x: 50, y: 50, width: 100, height: 100)
+        var s = CropperState(initial: rect)
+        s = s.applyMouseDown(at: CGPoint(x: 100, y: 100), handleSize: handleSize)
+        XCTAssertEqual(
+            s.desiredCursor(at: CGPoint(x: 100, y: 100), handleSize: handleSize, isOverRecordButton: false),
+            .grabbing
+        )
+        // Cursor wandered far off the rect — still grabbing.
+        XCTAssertEqual(
+            s.desiredCursor(at: CGPoint(x: 999, y: 999), handleSize: handleSize, isOverRecordButton: false),
+            .grabbing
+        )
+    }
+
+    func test_resizing_topLeft_isResizeNWSE_anywhere() {
+        let rect = CGRect(x: 50, y: 50, width: 100, height: 100)
+        var s = CropperState(initial: rect)
+        s = s.applyMouseDown(at: CGPoint(x: 50, y: 50), handleSize: handleSize)
+        XCTAssertEqual(
+            s.desiredCursor(at: CGPoint(x: 50, y: 50), handleSize: handleSize, isOverRecordButton: false),
+            .resizeNWSE
+        )
+        // Cursor drifts off the handle — gesture cursor stays locked.
+        XCTAssertEqual(
+            s.desiredCursor(at: CGPoint(x: 200, y: 200), handleSize: handleSize, isOverRecordButton: false),
+            .resizeNWSE
+        )
+    }
+
+    func test_resizing_leftEdge_isResizeHorizontal_anywhere() {
+        let rect = CGRect(x: 50, y: 50, width: 100, height: 100)
+        var s = CropperState(initial: rect)
+        s = s.applyMouseDown(at: CGPoint(x: 50, y: 100), handleSize: handleSize)
+        XCTAssertEqual(
+            s.desiredCursor(at: CGPoint(x: 50, y: 100), handleSize: handleSize, isOverRecordButton: false),
+            .resizeHorizontal
+        )
+        XCTAssertEqual(
+            s.desiredCursor(at: CGPoint(x: 999, y: 999), handleSize: handleSize, isOverRecordButton: false),
+            .resizeHorizontal
+        )
+    }
 }

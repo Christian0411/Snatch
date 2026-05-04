@@ -117,9 +117,8 @@ public struct CropperState: Equatable, Sendable {
         switch mode {
         case .idle, .dragging:
             return .crosshair
-        case .resizing:
-            // Filled in by Task 4.
-            return .arrow
+        case .resizing(let handle, _, _, _):
+            return Self.cursorFor(handle: handle, gestureActive: true)
         case .have(let r):
             guard let h = CropperGeometry.hitTest(point: p, in: r, handleSize: handleSize) else {
                 return .crosshair
