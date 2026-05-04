@@ -191,7 +191,7 @@ public final class CropperView: NSView {
         }
 
         // 5. Crosshair x/y readout (pre-M6 tweaks Item 1). Shown alongside the
-        //    custom NSCursor when `shouldShowCrosshair` is true. Numbers are
+        //    custom NSCursor when `desiredCursor(...) == .crosshair`. Numbers are
         //    in CG screen-space (top-left global origin) — matches what the
         //    macOS native screenshot tool shows. Multi-display correctness
         //    relies on the cropper window's frame.origin matching the chosen
@@ -330,9 +330,11 @@ public final class CropperView: NSView {
     }
 
     /// True when the Record button is visible and the current `mouseLocation`
-    /// is inside its frame. Used to suppress the crosshair cursor + x/y pill
-    /// over the button — the predicate alone would say "outside rect → show
-    /// crosshair," which is wrong when the user is reaching for Record.
+    /// is inside its frame. Fed to `desiredCursor`'s `isOverRecordButton`
+    /// override, which short-circuits to `.arrow` regardless of mode or
+    /// location — so the cursor over the button is the standard arrow
+    /// (not crosshair, not grab, not a resize cursor) and the x/y readout
+    /// pill is suppressed.
     private var cursorIsOverRecordButton: Bool {
         guard !recordButton.isHidden, let cursor = mouseLocation else { return false }
         return recordButton.frame.contains(cursor)

@@ -70,9 +70,12 @@ public struct CropperState: Equatable, Sendable {
 
     // MARK: - Crosshair visibility
 
-    /// Should the cropper show a crosshair cursor + coordinate readout right
-    /// now? The predicate captures "a click would start a fresh drag, OR the
-    /// user is currently drawing one." See pre-M6 tweaks spec, Item 1.
+    /// Convenience wrapper around `desiredCursor(...)` that returns `true`
+    /// only when the cursor should be the white "+" crosshair (i.e. when a
+    /// click would start a fresh drag, or the user is currently drawing
+    /// one). Canonical cursor logic lives in `desiredCursor` —
+    /// `shouldShowCrosshair` is retained for callers that only care about
+    /// the binary "is this a crosshair situation?" question.
     ///
     /// - `cursor` is in view-local coordinates (top-left origin, since the
     ///   cropper view is flipped). Pass `nil` to indicate "the cursor is

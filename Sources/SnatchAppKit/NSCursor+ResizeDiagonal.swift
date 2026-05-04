@@ -5,7 +5,16 @@ import AppKit
 /// publicly expose `↘↖` / `↗↙` cursors, so these go through the private
 /// `_windowResize…` selectors guarded by `responds(to:)`. If the
 /// selector ever disappears in a future macOS release, the cropper
-/// degrades gracefully to `resizeUpDown` rather than crashing.
+/// degrades gracefully to `resizeUpDown` — visibly wrong over a diagonal
+/// handle (the glyph implies vertical resize) but functional and
+/// non-crashing. Detection: a manual cropper-cursor smoke pass on each
+/// new macOS major.
+///
+/// Not cached: matches `NSCursor.arrow` / `.crosshair` and the rest of
+/// AppKit's `+systemCursor` accessors, which re-resolve on each call.
+/// `responds(to:)` + `perform` is a runtime hash lookup — single-digit
+/// microseconds — and caching would freeze the fallback at first access
+/// if the selector ever vanishes mid-session.
 extension NSCursor {
 
     /// `↘↖` cursor — top-left and bottom-right resize handles.
