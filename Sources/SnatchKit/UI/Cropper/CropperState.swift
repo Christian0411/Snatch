@@ -80,17 +80,7 @@ public struct CropperState: Equatable, Sendable {
     /// - `handleSize` is the same `CGFloat` constant the view uses for hit
     ///   testing (currently `CropperView.handleSize = 12`).
     public func shouldShowCrosshair(cursor: CGPoint?, handleSize: CGFloat) -> Bool {
-        guard let cursor else { return false }
-        switch mode {
-        case .idle:      return true
-        case .dragging:  return true
-        case .resizing:  return false
-        case .have(let r):
-            if CropperGeometry.hitTest(point: cursor, in: r, handleSize: handleSize) != nil {
-                return false
-            }
-            return !r.contains(cursor)
-        }
+        desiredCursor(at: cursor, handleSize: handleSize, isOverRecordButton: false) == .crosshair
     }
 
     // MARK: - Cursor affordance
