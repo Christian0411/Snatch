@@ -63,7 +63,6 @@ final class MenubarCoordinator {
     }
 
     func handleHotkey() {
-        let hotkeyInterval = LatencySignposts.beginHotkeyToPaint()
         if permissions.cachedState == .denied {
             permissionAlerts.showDeniedAlert()
             return
@@ -79,10 +78,15 @@ final class MenubarCoordinator {
             }
             return
         }
-        // Permission OK — route by session state:
+        // Permission OK — route by session state. We only begin the
+        // HotkeyToPaint signpost in the `.idle` arm because that's the only
+        // path that produces a cropper paint to end the interval. Beginning
+        // it earlier (or in non-idle arms) would leave dangling spans in the
+        // Instruments timeline.
         Task { @MainActor in
             switch session.state {
             case .idle:
+                let hotkeyInterval = LatencySignposts.beginHotkeyToPaint()
                 cropperWindow.cropperView.onFirstPaintAfterHotkey = {
                     LatencySignposts.endHotkeyToPaint(hotkeyInterval)
                 }
