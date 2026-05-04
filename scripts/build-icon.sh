@@ -22,10 +22,16 @@ let dim: CGFloat = 1024
 let cornerRadius = dim * 0.22
 let bg = NSColor(srgbRed: 28.0/255, green: 28.0/255, blue: 30.0/255, alpha: 1.0)
 
+// macOS 14+: paletteColors lets the SF Symbol draw white directly. The
+// previous source-atop tinting approach was buggy because the destination
+// (dark bg) was already fully opaque, so source-atop filled the entire
+// symbolRect white instead of just the symbol's glyph alpha.
 let symbolConfig = NSImage.SymbolConfiguration(pointSize: dim * 0.62, weight: .heavy)
+    .applying(NSImage.SymbolConfiguration(paletteColors: [.white]))
+
 guard let baseSymbol = NSImage(systemSymbolName: "camera.viewfinder", accessibilityDescription: nil),
       let symbol = baseSymbol.withSymbolConfiguration(symbolConfig) else {
-    fputs("symbol load failed\n", stderr)
+    fputs("symbol load failed: camera.viewfinder unavailable\n", stderr)
     exit(1)
 }
 
@@ -41,11 +47,7 @@ let img = NSImage(size: NSSize(width: dim, height: dim), flipped: false) { rect 
         width: symbolSize.width,
         height: symbolSize.height
     )
-    NSGraphicsContext.current?.saveGraphicsState()
     symbol.draw(in: symbolRect)
-    NSColor.white.setFill()
-    symbolRect.fill(using: .sourceAtop)
-    NSGraphicsContext.current?.restoreGraphicsState()
     return true
 }
 
