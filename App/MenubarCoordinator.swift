@@ -138,8 +138,10 @@ final class MenubarCoordinator {
         let screen = NSScreen.screens.first { $0.frame.contains(NSEvent.mouseLocation) }
             ?? NSScreen.main!
 
-        // Resize the window to fill the target screen.
-        cropperWindow.setFrame(screen.frame, display: false)
+        // Resize the window to fill the target screen. `resetToScreen` is
+        // used (instead of bare `setFrame`) so the cropper's edge-drag-clamp
+        // override doesn't squash this legitimate per-invocation relocation.
+        cropperWindow.resetToScreen(screen)
 
         // Pre-draw the last region in view-local coordinates.
         // CropperView uses a flipped coordinate system with origin at the
