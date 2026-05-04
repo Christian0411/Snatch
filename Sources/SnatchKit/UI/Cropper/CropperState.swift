@@ -113,13 +113,32 @@ public struct CropperState: Equatable, Sendable {
         isOverRecordButton: Bool
     ) -> CropperCursor {
         if isOverRecordButton { return .arrow }
-        guard cursor != nil else { return .arrow }
+        guard let p = cursor else { return .arrow }
         switch mode {
         case .idle, .dragging:
             return .crosshair
-        case .resizing, .have:
-            // Filled in by Tasks 3 and 4.
+        case .resizing:
+            // Filled in by Task 4.
             return .arrow
+        case .have(let r):
+            guard let h = CropperGeometry.hitTest(point: p, in: r, handleSize: handleSize) else {
+                return .crosshair
+            }
+            return Self.cursorFor(handle: h, gestureActive: false)
+        }
+    }
+
+    /// Maps a hit-tested handle to its directional cursor. `gestureActive`
+    /// distinguishes hover (`.body` → `.grab`) from an in-progress body-move
+    /// (`.body` → `.grabbing`); for the 8 resize handles the result is the
+    /// same in both cases.
+    private static func cursorFor(handle: CropperHandle, gestureActive: Bool) -> CropperCursor {
+        switch handle {
+        case .topLeft, .bottomRight: return .resizeNWSE
+        case .topRight, .bottomLeft: return .resizeNESW
+        case .top, .bottom:          return .resizeVertical
+        case .left, .right:          return .resizeHorizontal
+        case .body:                  return gestureActive ? .grabbing : .grab
         }
     }
 

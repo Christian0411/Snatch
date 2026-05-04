@@ -39,4 +39,106 @@ final class CropperStateCursorTests: XCTestCase {
             .crosshair
         )
     }
+
+    // MARK: - mode == .have(rect)
+
+    private func haveState() -> CropperState {
+        CropperState(initial: CGRect(x: 50, y: 50, width: 100, height: 100))
+    }
+
+    func test_have_overTopLeft_isResizeNWSE() {
+        XCTAssertEqual(
+            haveState().desiredCursor(at: CGPoint(x: 50, y: 50), handleSize: handleSize, isOverRecordButton: false),
+            .resizeNWSE
+        )
+    }
+
+    func test_have_overBottomRight_isResizeNWSE() {
+        XCTAssertEqual(
+            haveState().desiredCursor(at: CGPoint(x: 150, y: 150), handleSize: handleSize, isOverRecordButton: false),
+            .resizeNWSE
+        )
+    }
+
+    func test_have_overTopRight_isResizeNESW() {
+        XCTAssertEqual(
+            haveState().desiredCursor(at: CGPoint(x: 150, y: 50), handleSize: handleSize, isOverRecordButton: false),
+            .resizeNESW
+        )
+    }
+
+    func test_have_overBottomLeft_isResizeNESW() {
+        XCTAssertEqual(
+            haveState().desiredCursor(at: CGPoint(x: 50, y: 150), handleSize: handleSize, isOverRecordButton: false),
+            .resizeNESW
+        )
+    }
+
+    func test_have_overTopEdge_isResizeVertical() {
+        XCTAssertEqual(
+            haveState().desiredCursor(at: CGPoint(x: 100, y: 50), handleSize: handleSize, isOverRecordButton: false),
+            .resizeVertical
+        )
+    }
+
+    func test_have_overBottomEdge_isResizeVertical() {
+        XCTAssertEqual(
+            haveState().desiredCursor(at: CGPoint(x: 100, y: 150), handleSize: handleSize, isOverRecordButton: false),
+            .resizeVertical
+        )
+    }
+
+    func test_have_overLeftEdge_isResizeHorizontal() {
+        XCTAssertEqual(
+            haveState().desiredCursor(at: CGPoint(x: 50, y: 100), handleSize: handleSize, isOverRecordButton: false),
+            .resizeHorizontal
+        )
+    }
+
+    func test_have_overRightEdge_isResizeHorizontal() {
+        XCTAssertEqual(
+            haveState().desiredCursor(at: CGPoint(x: 150, y: 100), handleSize: handleSize, isOverRecordButton: false),
+            .resizeHorizontal
+        )
+    }
+
+    func test_have_insideBody_isGrab() {
+        XCTAssertEqual(
+            haveState().desiredCursor(at: CGPoint(x: 100, y: 100), handleSize: handleSize, isOverRecordButton: false),
+            .grab
+        )
+    }
+
+    func test_have_outsideRect_isCrosshair() {
+        XCTAssertEqual(
+            haveState().desiredCursor(at: CGPoint(x: 10, y: 10), handleSize: handleSize, isOverRecordButton: false),
+            .crosshair
+        )
+    }
+
+    func test_have_cursorNil_isArrow() {
+        XCTAssertEqual(
+            haveState().desiredCursor(at: nil, handleSize: handleSize, isOverRecordButton: false),
+            .arrow
+        )
+    }
+
+    // MARK: - Record-button override
+
+    func test_have_overRecordButton_overridesGrab() {
+        // Cursor would otherwise resolve to .grab inside the rect's body.
+        XCTAssertEqual(
+            haveState().desiredCursor(at: CGPoint(x: 100, y: 100), handleSize: handleSize, isOverRecordButton: true),
+            .arrow
+        )
+    }
+
+    func test_idle_overRecordButton_isArrow() {
+        // Record button is hidden in .idle, but the override still applies if true is passed.
+        let s = CropperState(initial: nil)
+        XCTAssertEqual(
+            s.desiredCursor(at: CGPoint(x: 100, y: 100), handleSize: handleSize, isOverRecordButton: true),
+            .arrow
+        )
+    }
 }
