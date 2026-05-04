@@ -1,6 +1,21 @@
 import Foundation
 import CoreGraphics
 
+/// The cursor the cropper should show, given the current `CropperState.mode`,
+/// the cursor's location, and whether it's over the floating Record button.
+/// Computed by `CropperState.desiredCursor(...)`. The AppKit-side
+/// `CropperView` maps each case to a concrete `NSCursor`.
+public enum CropperCursor: Equatable, Sendable {
+    case crosshair
+    case arrow
+    case resizeNWSE
+    case resizeNESW
+    case resizeVertical
+    case resizeHorizontal
+    case grab
+    case grabbing
+}
+
 /// Drag/resize state for the cropper view, expressed as a value type so it
 /// can be unit-tested in isolation from AppKit. The view owns one instance,
 /// rebinds it on each mouse / key event, and reads `displayRect` to drive
