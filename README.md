@@ -27,6 +27,10 @@ Fast, native macOS GIF recorder. Select a region, record, get a GIF — instantl
 
 Download the new DMG and drag the app to `Applications`, replacing the old copy.
 
+## Known issues
+
+- After granting Screen Recording in System Settings, you may need to **quit and re-launch Snatch** from the menubar before recording works — macOS doesn't propagate permission changes into running processes. ([#1](https://github.com/Christian0411/Snatch/issues/1))
+
 ## License
 
 MIT — see [LICENSE](LICENSE).

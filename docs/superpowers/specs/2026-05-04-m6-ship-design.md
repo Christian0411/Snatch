@@ -237,9 +237,15 @@ No `Tests/SnatchKitTests/` additions: M6's verifications are manual smoke gates,
 
 ## M6 smoke results
 
-(Filled in after Phase 3 runs.)
+### Stage 1 — dev-signed Release build, in /Applications (2026-05-04)
 
-- **macOS versions tested:** _TBD during smoke_
-- **Hotkey-to-paint latency (median, n>5):** _TBD_
-- **Stop-to-notification latency (median, n>5):** _TBD_
-- **Known issues filed:** _TBD (links to GitHub issues)_
+- **macOS version tested:** macOS 14 (Sonoma) on Apple Silicon.
+- **Hotkey-to-paint latency:** **median 13.8 ms** (n=13, range 5.6–62.3 ms; the 62.3 ms outlier was the first cold-launch trace, all subsequent samples ≤24.4 ms). Target was <100 ms — passed by ~7×.
+- **Stop-to-notification latency:** **median 59.6 ms** (n=3, range 54.1–60.0 ms). Target was <500 ms — passed by ~8×.
+- **§9 qualitative items:** all 10 pass (cropper interactions, hotkey from various contexts, three stop paths, permission flow, notification, clipboard paste, visual quality at all three scales, crash hygiene with no `*.partial` files left after `pkill -9`).
+- **Known issues filed:**
+  - [#1 Permission re-grant via Settings doesn't update running process](https://github.com/Christian0411/Snatch/issues/1) — user must quit and relaunch Snatch after granting Screen Recording in System Settings; the running process can't see TCC state changes. Workaround documented in the README "Known issues" section. Not a ship-blocker.
+
+### Stage 2 — notarized DMG, fresh install (TBD)
+
+_Filled in after Stage 2 runs._
