@@ -1,0 +1,14 @@
+// Snatch — Release-only build settings
+// Wired into the Release configuration via Xcode project editor.
+
+CODE_SIGN_STYLE = Manual
+CODE_SIGN_IDENTITY = Developer ID Application
+DEVELOPMENT_TEAM = 8E765EZVAM
+PROVISIONING_PROFILE_SPECIFIER =
+
+ENABLE_HARDENED_RUNTIME = YES
+
+ARCHS = $(ARCHS_STANDARD)
+ONLY_ACTIVE_ARCH = NO
+
+CODE_SIGN_ENTITLEMENTS = App/Snatch.entitlements

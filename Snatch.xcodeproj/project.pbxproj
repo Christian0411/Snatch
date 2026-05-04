@@ -50,6 +50,7 @@
 		AD1A06CC2FA5547A00E3D2EB /* MenubarIconImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenubarIconImage.swift; sourceTree = "<group>"; };
 		AD1A06CE2FA5585600E3D2EB /* PermissionAlertPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionAlertPresenter.swift; sourceTree = "<group>"; };
 		AD1A06D02FA5590E00E3D2EB /* MenubarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenubarController.swift; sourceTree = "<group>"; };
+		AD1A06D22FA91D9700E3D2EB /* Snatch-Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Snatch-Release.xcconfig"; sourceTree = "<group>"; };
 		AD9CEB212FA54B2600EA20C6 /* Snatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Snatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AD9CEB312FA54B2800EA20C6 /* SnatchTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SnatchTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		AD9CEB3B2FA54B2800EA20C6 /* SnatchUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SnatchUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -135,6 +136,7 @@
 		AD9CEB182FA54B2600EA20C6 = {
 			isa = PBXGroup;
 			children = (
+				AD1A06D22FA91D9700E3D2EB /* Snatch-Release.xcconfig */,
 				AD9CEB222FA54B2600EA20C6 /* Products */,
 				AD1A06BC2FA54C6900E3D2EB /* App */,
 			);
@@ -398,6 +400,7 @@
 		};
 		AD9CEB442FA54B2800EA20C6 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = AD1A06D22FA91D9700E3D2EB /* Snatch-Release.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -491,12 +494,11 @@
 		};
 		AD9CEB472FA54B2800EA20C6 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = AD1A06D22FA91D9700E3D2EB /* Snatch-Release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = "";
 				CODE_SIGN_ENTITLEMENTS = App/Snatch.entitlements;
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 8E765EZVAM;
