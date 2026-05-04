@@ -93,6 +93,36 @@ public struct CropperState: Equatable, Sendable {
         }
     }
 
+    // MARK: - Cursor affordance
+
+    /// The cursor the view should display right now, given the current mode,
+    /// the cursor's view-local position, and whether the cursor is over the
+    /// floating Record button. Pure: no AppKit dependency.
+    ///
+    /// - `cursor` is in view-local coordinates (top-left origin, since the
+    ///   cropper view is flipped). Pass `nil` to indicate "the cursor is
+    ///   outside the cropper view."
+    /// - `handleSize` is the same `CGFloat` constant the view uses for hit
+    ///   testing (currently `CropperView.handleSize = 12`).
+    /// - `isOverRecordButton` short-circuits to `.arrow` when true, regardless
+    ///   of mode or location. The Record button is owned by the view, so the
+    ///   hit-test is performed there and passed in here.
+    public func desiredCursor(
+        at cursor: CGPoint?,
+        handleSize: CGFloat,
+        isOverRecordButton: Bool
+    ) -> CropperCursor {
+        if isOverRecordButton { return .arrow }
+        guard cursor != nil else { return .arrow }
+        switch mode {
+        case .idle, .dragging:
+            return .crosshair
+        case .resizing, .have:
+            // Filled in by Tasks 3 and 4.
+            return .arrow
+        }
+    }
+
     // MARK: - Transitions
 
     public func applyMouseDown(at point: CGPoint, handleSize: CGFloat) -> CropperState {
