@@ -48,7 +48,7 @@ final class NotificationPresenter: NSObject {
         }
     }
 
-    func present(savedURL: URL) {
+    func present(savedURL: URL, onAdded: (() -> Void)? = nil) {
         let content = UNMutableNotificationContent()
         content.title = "GIF saved"
         content.body = savedURL.lastPathComponent
@@ -65,6 +65,7 @@ final class NotificationPresenter: NSObject {
             if let error {
                 Log.system.error("notification add failed: \(String(describing: error), privacy: .public)")
             }
+            onAdded?()
         }
     }
 

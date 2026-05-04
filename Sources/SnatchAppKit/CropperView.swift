@@ -48,6 +48,12 @@ public final class CropperView: NSView {
     /// Called when the user confirms the region (Record button, Space, or Return).
     public var onRecord: ((CGRect) -> Void)?
 
+    /// Fired exactly once at the bottom of `draw(_:)` when set non-nil. Used
+    /// by `MenubarCoordinator` to close the `LatencySignposts.HotkeyToPaint`
+    /// interval. Self-clearing — the closure is `nil`-ed immediately after
+    /// invocation so subsequent paints don't re-fire.
+    public var onFirstPaintAfterHotkey: (() -> Void)?
+
     /// Called when the user cancels (Esc).
     public var onCancel: (() -> Void)?
 
@@ -253,6 +259,11 @@ public final class CropperView: NSView {
                 at: CGPoint(x: pillX + pad, y: pillY + pad + xSize.height),
                 withAttributes: textAttrs
             )
+        }
+
+        if let cb = onFirstPaintAfterHotkey {
+            onFirstPaintAfterHotkey = nil
+            cb()
         }
     }
 

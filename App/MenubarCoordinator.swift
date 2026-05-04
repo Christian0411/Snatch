@@ -63,6 +63,7 @@ final class MenubarCoordinator {
     }
 
     func handleHotkey() {
+        let hotkeyInterval = LatencySignposts.beginHotkeyToPaint()
         if permissions.cachedState == .denied {
             permissionAlerts.showDeniedAlert()
             return
@@ -81,7 +82,11 @@ final class MenubarCoordinator {
         // Permission OK — route by session state:
         Task { @MainActor in
             switch session.state {
-            case .idle:                           session.beginCropping()
+            case .idle:
+                cropperWindow.cropperView.onFirstPaintAfterHotkey = {
+                    LatencySignposts.endHotkeyToPaint(hotkeyInterval)
+                }
+                session.beginCropping()
             case .cropping:                       session.cancelCropping()
             case .recording:                      await self.requestStop()
             case .finalizing, .cancelling:        break
@@ -264,13 +269,18 @@ final class MenubarCoordinator {
     }
 
     func requestStop() async {
+        let stopInterval = LatencySignposts.beginStopToNotification()
         do {
             let result = try await session.stop()
             pasteboard.copy(fileURL: result.outputURL)
             recentsStore.add(result.outputURL)
-            notifier.present(savedURL: result.outputURL)
+            notifier.present(savedURL: result.outputURL) {
+                LatencySignposts.endStopToNotification(stopInterval)
+            }
             Log.coordinator.info("saved \(result.outputURL.lastPathComponent, privacy: .public) drops=\(result.droppedFrames) latency=\(String(format: "%.1f", result.stopLatencyMs))ms")
         } catch {
+            // Failure path doesn't end the interval — that's OK; signposts are
+            // about happy-path latency. Failures are logged elsewhere.
             notifier.presentFailure("Recording failed: \(error.localizedDescription)")
             Log.coordinator.error("session.stop failed: \(String(describing: error), privacy: .public)")
         }
