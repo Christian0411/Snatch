@@ -199,8 +199,11 @@ public final class CropperView: NSView {
         //    NOTE: this runs in every mode (.idle / .dragging / .resizing /
         //    .have) — the predicate gates which modes actually render.
         if let cursor = mouseLocation,
-           !cursorIsOverRecordButton,
-           state.shouldShowCrosshair(cursor: cursor, handleSize: Self.handleSize),
+           state.desiredCursor(
+               at: cursor,
+               handleSize: Self.handleSize,
+               isOverRecordButton: cursorIsOverRecordButton
+           ) == .crosshair,
            let window = window,
            let mainScreen = NSScreen.main {
 
