@@ -80,6 +80,7 @@ If any of steps 5–9 regresses, the chosen mechanism is too aggressive — back
 ## Files touched
 
 - `Sources/SnatchAppKit/CropperWindow.swift` — the chosen Phase 2 override(s).
+- `App/MenubarCoordinator.swift` — *added during code review.* `showCropper()` calls `cropperWindow.setFrame(screen.frame, display: false)` on every invocation to relocate the pre-warmed cropper to whichever screen the cursor is on. The Phase 2 clamp would silently swallow that legitimate per-invocation reposition on multi-display setups. The fix introduces a `CropperWindow.resetToScreen(_:)` helper that bypasses the clamp; `showCropper()` is updated to call it.
 - `CLAUDE.md` — update line 44 to reflect the fix landed (move the bug from "out-of-scope follow-up" to "fixed in pre-M6 …").
 - `~/.claude/projects/-Users-starship-src/memory/snatch_cropper_window_edge_resize_bug.md` — delete. The memory exists only to flag a pending bug; once fixed it has no further use.
 - `~/.claude/projects/-Users-starship-src/memory/MEMORY.md` — remove the corresponding index line.
