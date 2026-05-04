@@ -305,14 +305,24 @@ public final class CropperView: NSView {
     /// on every `mouseMoved`, so we drive the swap manually as the cursor
     /// traverses the static tracking area.
     private func updateCursor() {
-        if cursorIsOverRecordButton {
-            NSCursor.arrow.set()
-            return
-        }
-        if state.shouldShowCrosshair(cursor: mouseLocation, handleSize: Self.handleSize) {
-            Self.crosshairCursor.set()
-        } else {
-            NSCursor.arrow.set()
+        let cursor = state.desiredCursor(
+            at: mouseLocation,
+            handleSize: Self.handleSize,
+            isOverRecordButton: cursorIsOverRecordButton
+        )
+        nsCursor(for: cursor).set()
+    }
+
+    private func nsCursor(for c: CropperCursor) -> NSCursor {
+        switch c {
+        case .crosshair:        return Self.crosshairCursor
+        case .arrow:            return .arrow
+        case .resizeNWSE:       return .resizeDiagonalNWSE
+        case .resizeNESW:       return .resizeDiagonalNESW
+        case .resizeVertical:   return .resizeUpDown
+        case .resizeHorizontal: return .resizeLeftRight
+        case .grab:             return .openHand
+        case .grabbing:         return .closedHand
         }
     }
 
