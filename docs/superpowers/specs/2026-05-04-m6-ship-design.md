@@ -246,6 +246,14 @@ No `Tests/SnatchKitTests/` additions: M6's verifications are manual smoke gates,
 - **Known issues filed:**
   - [#1 Permission re-grant via Settings doesn't update running process](https://github.com/Christian0411/Snatch/issues/1) — user must quit and relaunch Snatch after granting Screen Recording in System Settings; the running process can't see TCC state changes. Workaround documented in the README "Known issues" section. Not a ship-blocker.
 
-### Stage 2 — notarized DMG, fresh install (TBD)
+### Stage 2 — notarized DMG, fresh install (2026-05-04)
 
-_Filled in after Stage 2 runs._
+- **Pipeline run:** `scripts/release.sh 1.0.0` (dry-run). All 12 steps clean: archive, export, signing verify, .app notarize (status Accepted), .app staple, DMG build (3.1 MB), DMG sign, DMG notarize (status Accepted), DMG staple, final `spctl -a -t open` pass. Two notarization round-trips ~3 min each.
+- **Gatekeeper dialog on first launch:** the standard "Snatch is an app downloaded from the Internet. Are you sure you want to open it?" appeared (signature + notarization accepted).
+- **Subset of §9 covered:**
+  - #1 cropper, drag, record, stop — passed.
+  - #2 hotkey from idle — passed.
+  - #4 permission flow — required quit-and-relaunch dance per known-issue [#1](https://github.com/Christian0411/Snatch/issues/1); after relaunch, recording succeeded.
+  - #5 notification + Reveal in Finder — passed (after `tccutil reset All co.snatch.app` to clear inherited TCC state from prior dev-signed builds; the deliverer side worked throughout per `usernoted` logs, the visible-banner side took some time to surface — likely dev-Mac cruft from accumulated dev-build registrations rather than a code issue).
+  - #6 clipboard paste into Notes — passed.
+  - #10 crash hygiene — passed (`pkill -9 Snatch` mid-recording, relaunch, no `*.partial` files).
